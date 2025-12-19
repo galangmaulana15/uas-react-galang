@@ -1,4 +1,4 @@
-# 🎬 RoncoMovie - Movie Discovery Platform
+# 🎬 RoncoMovie - Movie Discovery Platformm
 
 RoncoMovie is a modern movie discovery platform built with React, Tailwind CSS v4, and integrated with The Movie Database (TMDb) API. This project fulfills all requirements for the React Project 2025 assignment.
 
