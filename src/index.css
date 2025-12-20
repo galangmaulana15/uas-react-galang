@@ -1,43 +1,65 @@
-/* index.css */
-@import "tailwindcss";
+/* Tambahkan semua animasi dari komponen ke sini */
 
-/* ... existing styles ... */
-
-/* Custom Animations for Modal */
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-    }
-    to { 
-        opacity: 1; 
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @keyframes slideUp {
-    from { 
+    from {
         opacity: 0;
         transform: translateY(50px) scale(0.95); 
     }
-    to { 
+    to {
         opacity: 1;
         transform: translateY(0) scale(1); 
     }
 }
 
 @keyframes slideDown {
-    from { 
+    from {
         opacity: 0;
         transform: translateY(-50px) scale(0.95); 
     }
-    to { 
+    to {
         opacity: 1;
         transform: translateY(0) scale(1); 
     }
 }
 
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px); 
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0); 
+    }
+}
+
 @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes float-delay {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes float-delay-2 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes ping-slow {
+    75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.2; }
 }
 
 @keyframes gradient-x {
@@ -50,73 +72,45 @@
     50% { transform: scale(1.1); }
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes shrinkWidth {
+    from { width: 100%; }
+    to { width: 0%; }
 }
 
-@keyframes ping-slow {
-    75%, 100% { transform: scale(2); opacity: 0; }
-}
-
-.animate-float {
-    animation: float 3s ease-in-out infinite;
-}
-
-.animate-gradient-x {
+/* Utility Classes */
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+.animate-slideUp { animation: slideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+.animate-slideDown { animation: slideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+.animate-slideInRight { animation: slideInRight 0.3s ease-out; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-float-delay { animation: float-delay 4s ease-in-out infinite; }
+.animate-float-delay-2 { animation: float-delay-2 5s ease-in-out infinite; }
+.animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+.animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+.animate-gradient-x { 
     background-size: 200% auto;
     animation: gradient-x 3s ease infinite;
 }
+.animate-heartbeat { animation: heartbeat 0.5s ease-in-out; }
 
-.animate-heartbeat {
-    animation: heartbeat 0.5s ease-in-out;
+/* Line clamp utilities */
+.line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
 }
 
-.animate-slideDown {
-    animation: slideDown 0.3s ease-out;
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
-.animate-ping-slow {
-    animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slideUp {
-    animation: slideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-.animate-slideDown {
-    animation: slideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-/* Smooth scrollbar for modal */
-.modal-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #4a5568 #2d3748;
-}
-
-.modal-scrollbar::-webkit-scrollbar {
-    width: 8px;
-}
-
-.modal-scrollbar::-webkit-scrollbar-track {
-    background: #2d3748;
-    border-radius: 4px;
-}
-
-.modal-scrollbar::-webkit-scrollbar-thumb {
-    background: #4a5568;
-    border-radius: 4px;
-}
-
-.modal-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #718096;
-}
-
-/* Backdrop blur effect */
-.backdrop-blur-sm {
-    backdrop-filter: blur(8px);
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
 }

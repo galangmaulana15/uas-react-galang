@@ -10,13 +10,13 @@ const Header = ({ onSearch }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (onSearch && searchQuery.trim()) {
-            onSearch(searchQuery);
-            navigate(`/movies?search=${encodeURIComponent(searchQuery)}`);
-        }
-    };
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+        navigate(`/movies?search=${encodeURIComponent(searchQuery.trim())}`);
+        setSearchQuery(''); // Clear input after search
+    }
+};
 
     const handleLogout = () => {
         logout();

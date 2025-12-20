@@ -87,3 +87,6 @@ roncomovie/
 │ ├── main.jsx # App entry point
 │ └── index.css # Global styles
 └── README.md
+|-- .gitignore
+|-- package.json
+|-- vite.config.js
