@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import AddMovie from './pages/AddMovie';
 import Profile from './pages/Profile';
 
+
 const AppLayout = () => {
     const location = useLocation();
     const hideFooter = location.pathname === '/login' || location.pathname === '/register';

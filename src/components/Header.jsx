@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Film, User, LogOut, Menu, X, Home, Star, Heart, Plus, Bell, Settings } from 'lucide-react';
+import { Search, Film, User, LogOut, Menu, X, Home, Star, Heart, Plus, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Header = ({ onSearch }) => {
@@ -93,14 +93,6 @@ const Header = ({ onSearch }) => {
                                 </button>
                             </div>
                         </form>
-
-                        {/* Notifications */}
-                        {user && (
-                            <button className="hidden md:block p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300 relative">
-                                <Bell className="h-5 w-5" />
-                                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
-                            </button>
-                        )}
 
                         {/* User Menu */}
                         {user ? (

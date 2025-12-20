@@ -6,7 +6,6 @@ import { getImageUrl } from '../services/api';
 const MovieCard = ({ movie, onFavoriteToggle, isFavorite, onQuickView }) => {
     const [imageError, setImageError] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const [localIsFavorite, setLocalIsFavorite] = useState(isFavorite);
 
     const handleImageError = () => {
         setImageError(true);
@@ -27,9 +26,6 @@ const MovieCard = ({ movie, onFavoriteToggle, isFavorite, onQuickView }) => {
         if (onFavoriteToggle) {
             onFavoriteToggle(movie);
         }
-        
-        // Update local state
-        setLocalIsFavorite(!localIsFavorite);
     };
 
     return (
@@ -97,12 +93,12 @@ const MovieCard = ({ movie, onFavoriteToggle, isFavorite, onQuickView }) => {
                 {/* Favorite Button */}
                 <button
                     onClick={handleFavorite}
-                    className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300 shadow-lg ${localIsFavorite 
+                    className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300 shadow-lg ${isFavorite 
                         ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white scale-110' 
                         : 'bg-gray-900/80 text-gray-300 hover:bg-red-500/20 hover:text-red-400 hover:scale-110'
                     }`}
                 >
-                    <Heart className={`h-5 w-5 ${localIsFavorite ? 'fill-current' : ''}`} />
+                    <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
             </div>
 

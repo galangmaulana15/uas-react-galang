@@ -56,4 +56,34 @@ RoncoMovie is a modern movie discovery platform built with React, Tailwind CSS v
   - Watch time tracking
   - Admin controls (for admin users)
 
+
 ## 📁 Project Structure
+roncomovie/
+├── public/
+├── src/
+│ ├── components/
+│ │ ├── Header.jsx # Navigation header
+│ │ ├── Footer.jsx # Site footer
+│ │ ├── MovieCard.jsx # Movie display card
+│ │ ├── MovieModal.jsx # Movie modal(ifneeded)
+│ │ └── ProtectedRoute.jsx # Auth protection
+│ ├── pages/
+│ │ ├── Home.jsx # Landing page
+│ │ ├── Login.jsx # Login page
+│ │ ├── Register.jsx # Registration page
+│ │ ├── Movies.jsx # Movie listing
+│ │ ├── MovieDetail.jsx # Single movie view
+│ │ ├── Favorites.jsx # User favorites
+│ │ ├── Dashboard.jsx # User dashboard
+│ │ └── AddMovie.jsx # Add movie (admin)
+| | |-- Profile.jsx # Profile user /admin
+│ ├── context/
+│ │ └── AuthContext.jsx # Authentication context
+│ ├── services/
+│ │ └── api.js # TMDB API integration
+│ ├── utils/
+│ │ └── validation.js # Form validation utilities
+│ ├── App.jsx # Main router
+│ ├── main.jsx # App entry point
+│ └── index.css # Global styles
+└── README.md
