@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { validateEmail } from '../utils/validation';
 
 const Profile = () => {
-    const { user, updateProfile, deleteAccount, logout } = useAuth();
+    const { user, updateProfile, deleteAccount, logout, changePassword } = useAuth();
     const navigate = useNavigate();
     
     const [formData, setFormData] = useState({
@@ -25,6 +25,7 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [avatarPreview, setAvatarPreview] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
     useEffect(() => {
         if (!user) {
@@ -145,38 +146,48 @@ const Profile = () => {
         setMessage({ type: '', text: '' });
 
         try {
-            // In real app, you would call API to change password
-            // For now, we'll simulate it
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result = await changePassword(
+                passwordData.currentPassword,
+                passwordData.newPassword
+            );
             
-            setMessage({ type: 'success', text: 'Password changed successfully!' });
-            setPasswordData({
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: ''
-            });
+            if (result.success) {
+                setMessage({ type: 'success', text: result.message });
+                setPasswordData({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: ''
+                });
+            }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to change password' });
+            setMessage({ type: 'error', text: error.message || 'Failed to change password' });
         } finally {
             setLoading(false);
         }
     };
 
+    // PERBAIKAN: Validasi delete account
     const handleDeleteAccount = async () => {
+        if (deleteConfirmationText !== 'DELETE') {
+            setMessage({ type: 'error', text: 'Please type "DELETE" exactly to confirm' });
+            return;
+        }
+
         setLoading(true);
         
         try {
-            const result = await deleteAccount();
+            const result = await deleteAccount(deleteConfirmationText);
             
             if (result.success) {
                 logout();
                 navigate('/');
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to delete account' });
+            setMessage({ type: 'error', text: error.message || 'Failed to delete account' });
         } finally {
             setLoading(false);
             setShowDeleteConfirm(false);
+            setDeleteConfirmationText('');
         }
     };
 
@@ -196,7 +207,6 @@ const Profile = () => {
     return (
         <div className="min-h-screen text-white py-12 px-4">
             <div className="max-w-6xl mx-auto">
-                {/* Header */}
                 <div className="mb-8 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                         My Profile
@@ -204,12 +214,9 @@ const Profile = () => {
                     <p className="text-gray-400 text-lg">Manage your account settings and preferences</p>
                 </div>
 
-                {/* Main Content */}
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar */}
                     <div className="lg:w-1/3">
                         <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                            {/* User Card */}
                             <div className="text-center mb-8">
                                 <div className="relative w-32 h-32 mx-auto mb-4">
                                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-50"></div>
@@ -244,7 +251,6 @@ const Profile = () => {
                                 </div>
                             </div>
 
-                            {/* Stats */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
                                     <span className="text-gray-400">Member Since</span>
@@ -255,14 +261,13 @@ const Profile = () => {
                                 </div>
                                 
                                 <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
-                                    <span className="text-gray-400">Favorites</span>
-                                    <span className="font-medium">
-                                        {user.favorites?.length || 0} movies
+                                    <span className="text-gray-400">Role</span>
+                                    <span className="font-medium capitalize">
+                                        {user.role === 'admin' ? 'Administrator' : 'User'}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Navigation */}
                             <div className="mt-8">
                                 <nav className="space-y-2">
                                     <button
@@ -295,9 +300,7 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* Main Panel */}
                     <div className="lg:w-2/3">
-                        {/* Messages */}
                         {message.text && (
                             <div className={`mb-6 p-4 rounded-xl border ${message.type === 'success' 
                                 ? 'bg-green-900/20 border-green-700/30 text-green-300' 
@@ -314,7 +317,6 @@ const Profile = () => {
                             </div>
                         )}
 
-                        {/* Profile Settings */}
                         {activeTab === 'profile' && (
                             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                                 <h3 className="text-2xl font-bold mb-6 flex items-center">
@@ -324,7 +326,6 @@ const Profile = () => {
                                 
                                 <form onSubmit={handleProfileSubmit} className="space-y-6">
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        {/* Name */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">
                                                 Full Name *
@@ -347,7 +348,6 @@ const Profile = () => {
                                             )}
                                         </div>
 
-                                        {/* Email */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300 mb-2">
                                                 Email Address *
@@ -371,7 +371,6 @@ const Profile = () => {
                                         </div>
                                     </div>
 
-                                    {/* Bio */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
                                             Bio
@@ -386,7 +385,6 @@ const Profile = () => {
                                         />
                                     </div>
 
-                                    {/* Submit */}
                                     <button
                                         type="submit"
                                         disabled={loading}
@@ -411,7 +409,6 @@ const Profile = () => {
                             </div>
                         )}
 
-                        {/* Change Password */}
                         {activeTab === 'password' && (
                             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                                 <h3 className="text-2xl font-bold mb-6 flex items-center">
@@ -420,7 +417,6 @@ const Profile = () => {
                                 </h3>
                                 
                                 <form onSubmit={handlePasswordSubmit} className="space-y-6">
-                                    {/* Current Password */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
                                             Current Password *
@@ -440,7 +436,6 @@ const Profile = () => {
                                         )}
                                     </div>
 
-                                    {/* New Password */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
                                             New Password *
@@ -460,7 +455,6 @@ const Profile = () => {
                                         )}
                                     </div>
 
-                                    {/* Confirm Password */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
                                             Confirm New Password *
@@ -480,7 +474,6 @@ const Profile = () => {
                                         )}
                                     </div>
 
-                                    {/* Password Requirements */}
                                     <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700/30">
                                         <h4 className="text-sm font-medium text-gray-300 mb-2">Password Requirements:</h4>
                                         <ul className="text-sm text-gray-400 space-y-1">
@@ -499,7 +492,6 @@ const Profile = () => {
                                         </ul>
                                     </div>
 
-                                    {/* Submit */}
                                     <button
                                         type="submit"
                                         disabled={loading}
@@ -523,7 +515,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Danger Zone */}
+                {/* PERBAIKAN: Danger Zone dengan validasi */}
                 <div className="mt-8 bg-red-900/10 border border-red-700/30 rounded-2xl p-6 backdrop-blur-sm">
                     <h3 className="text-xl font-bold mb-4 text-red-400 flex items-center">
                         <AlertCircle className="h-6 w-6 mr-3" />
@@ -535,43 +527,62 @@ const Profile = () => {
                             Once you delete your account, there is no going back. All your data including favorites, watchlists, and profile information will be permanently deleted.
                         </p>
                         
-                        {!showDeleteConfirm ? (
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-300"
-                            >
-                                <Trash2 className="h-5 w-5" />
-                                <span>Delete My Account</span>
-                            </button>
-                        ) : (
-                            <div className="p-4 bg-gray-900/50 rounded-lg border border-red-700/50">
-                                <h4 className="text-lg font-semibold mb-2 text-white">Are you absolutely sure?</h4>
-                                <p className="text-gray-400 mb-4">This action cannot be undone. Please type "DELETE" to confirm.</p>
-                                
-                                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Type DELETE to confirm"
-                                        className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                                        id="deleteConfirm"
-                                    />
-                                    <div className="flex space-x-4">
-                                        <button
-                                            onClick={handleDeleteAccount}
-                                            disabled={loading}
-                                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
-                                        >
-                                            {loading ? 'Deleting...' : 'Yes, Delete Account'}
-                                        </button>
-                                        <button
-                                            onClick={() => setShowDeleteConfirm(false)}
-                                            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
+                        {/* PERBAIKAN: Admin tidak bisa hapus akun default */}
+                        {user.email === 'admin@ronco.com' ? (
+                            <div className="p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                                <p className="text-yellow-300">
+                                    <strong>Note:</strong> Default admin account cannot be deleted. This is a system account.
+                                </p>
                             </div>
+                        ) : (
+                            <>
+                                {!showDeleteConfirm ? (
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-300"
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                        <span>Delete My Account</span>
+                                    </button>
+                                ) : (
+                                    <div className="p-4 bg-gray-900/50 rounded-lg border border-red-700/50">
+                                        <h4 className="text-lg font-semibold mb-2 text-white">Are you absolutely sure?</h4>
+                                        <p className="text-gray-400 mb-4">
+                                            This action cannot be undone. Please type <strong>"DELETE"</strong> exactly to confirm.
+                                        </p>
+                                        
+                                        <div className="space-y-4">
+                                            <input
+                                                type="text"
+                                                placeholder='Type "DELETE" to confirm'
+                                                value={deleteConfirmationText}
+                                                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            />
+                                            <div className="flex space-x-4">
+                                                <button
+                                                    onClick={handleDeleteAccount}
+                                                    disabled={loading || deleteConfirmationText !== 'DELETE'}
+                                                    className={`px-6 py-2 rounded-lg transition-colors ${deleteConfirmationText === 'DELETE' 
+                                                        ? 'bg-red-600 hover:bg-red-700 text-white' 
+                                                        : 'bg-red-800/50 text-red-300 cursor-not-allowed'}`}
+                                                >
+                                                    {loading ? 'Deleting...' : 'Yes, Delete Account'}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowDeleteConfirm(false);
+                                                        setDeleteConfirmationText('');
+                                                    }}
+                                                    className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

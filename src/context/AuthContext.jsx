@@ -32,7 +32,8 @@ export const AuthProvider = ({ children }) => {
                         name: 'Admin Ronco',
                         role: 'admin',
                         joinedDate: new Date().toISOString(),
-                        avatar: '👑'
+                        avatar: '👑',
+                        _isAdmin: true
                     };
                     
                     setUser(userData);
@@ -93,7 +94,7 @@ export const AuthProvider = ({ children }) => {
                 users.push(newUser);
                 localStorage.setItem('roncomovie_users', JSON.stringify(users));
                 
-                // Initialize user-specific storage
+                // Initialize user-specific favorites
                 localStorage.setItem(getUserFavoritesKey(userId), JSON.stringify([]));
                 
                 // Login the new user
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }) => {
                     const updatedUser = { 
                         ...user, 
                         ...updatedData,
-                        id: user.id // Ensure ID doesn't change
+                        id: user.id
                     };
                     
                     setUser(updatedUser);
@@ -136,7 +137,6 @@ export const AuthProvider = ({ children }) => {
                     const userIndex = users.findIndex(u => u.id === user.id);
                     
                     if (userIndex !== -1) {
-                        // Keep password if not being updated
                         const updatedUserWithPassword = {
                             ...users[userIndex],
                             ...updatedData
@@ -154,12 +154,25 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const deleteAccount = () => {
+    // PERBAIKAN: Tambahkan validasi delete account
+    const deleteAccount = (confirmationText = '') => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 try {
                     if (!user) {
                         reject({ success: false, message: 'User not logged in' });
+                        return;
+                    }
+
+                    // Validasi konfirmasi
+                    if (confirmationText !== 'DELETE') {
+                        reject({ success: false, message: 'Confirmation text must be exactly "DELETE"' });
+                        return;
+                    }
+
+                    // Untuk admin, jangan hapus akun admin default
+                    if (user.email === 'admin@ronco.com') {
+                        reject({ success: false, message: 'Cannot delete default admin account' });
                         return;
                     }
 
@@ -177,7 +190,7 @@ export const AuthProvider = ({ children }) => {
                     setUser(null);
                     localStorage.removeItem('roncomovie_user');
                     
-                    resolve({ success: true });
+                    resolve({ success: true, message: 'Account deleted successfully' });
                 } catch (error) {
                     reject({ success: false, message: 'Failed to delete account' });
                 }
@@ -185,6 +198,7 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    // PERBAIKAN: Favorites system yang benar
     const getUserFavorites = () => {
         if (!user) return [];
         const key = getUserFavoritesKey(user.id);
@@ -201,11 +215,13 @@ export const AuthProvider = ({ children }) => {
             const exists = favorites.some(fav => fav.id === movie.id);
             if (exists) return true;
             
-            // Add to favorites
+            // Add to favorites dengan user info
             const movieWithUserData = {
                 ...movie,
                 addedAt: new Date().toISOString(),
-                userId: user.id
+                userId: user.id,
+                userName: user.name,
+                userEmail: user.email
             };
             
             const updatedFavorites = [...favorites, movieWithUserData];
@@ -241,6 +257,100 @@ export const AuthProvider = ({ children }) => {
         return favorites.some(movie => movie.id === movieId);
     };
 
+    // PERBAIKAN: Tambahkan fungsi untuk admin
+    const isUserMovie = (movieId) => {
+        const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
+        return userMovies.some(movie => movie.id == movieId);
+    };
+
+    const deleteUserMovie = (movieId) => {
+        try {
+            const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
+            const movieToDelete = userMovies.find(m => m.id == movieId);
+            
+            if (!movieToDelete) {
+                return { success: false, message: 'Movie not found' };
+            }
+
+            const updatedMovies = userMovies.filter(movie => movie.id !== movieId);
+            localStorage.setItem('user_movies', JSON.stringify(updatedMovies));
+            
+            return { success: true, message: 'Movie deleted successfully', movie: movieToDelete };
+        } catch (error) {
+            return { success: false, message: 'Failed to delete movie' };
+        }
+    };
+
+    const updateUserMovie = (movieId, updatedData) => {
+        try {
+            const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
+            const movieIndex = userMovies.findIndex(m => m.id == movieId);
+            
+            if (movieIndex === -1) {
+                return { success: false, message: 'Movie not found' };
+            }
+
+            userMovies[movieIndex] = { ...userMovies[movieIndex], ...updatedData };
+            localStorage.setItem('user_movies', JSON.stringify(userMovies));
+            
+            return { success: true, message: 'Movie updated successfully', movie: userMovies[movieIndex] };
+        } catch (error) {
+            return { success: false, message: 'Failed to update movie' };
+        }
+    };
+
+    // PERBAIKAN: Tambahkan changePassword function
+    const changePassword = (currentPassword, newPassword) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if (!user) {
+                    reject({ success: false, message: 'User not logged in' });
+                    return;
+                }
+
+                // For admin account
+                if (user.email === 'admin@ronco.com') {
+                    if (currentPassword !== 'admin123') {
+                        reject({ success: false, message: 'Current password is incorrect' });
+                        return;
+                    }
+                    
+                    // Update admin password
+                    const updatedUser = { 
+                        ...user, 
+                        _passwordUpdated: new Date().toISOString()
+                    };
+                    
+                    setUser(updatedUser);
+                    localStorage.setItem('roncomovie_user', JSON.stringify(updatedUser));
+                    resolve({ success: true, message: 'Password changed successfully' });
+                    return;
+                }
+
+                // For regular users
+                const users = JSON.parse(localStorage.getItem('roncomovie_users') || '[]');
+                const userIndex = users.findIndex(u => u.id === user.id);
+                
+                if (userIndex === -1) {
+                    reject({ success: false, message: 'User not found' });
+                    return;
+                }
+                
+                if (users[userIndex].password !== currentPassword) {
+                    reject({ success: false, message: 'Current password is incorrect' });
+                    return;
+                }
+                
+                // Update password
+                users[userIndex].password = newPassword;
+                users[userIndex].passwordUpdatedAt = new Date().toISOString();
+                localStorage.setItem('roncomovie_users', JSON.stringify(users));
+                
+                resolve({ success: true, message: 'Password changed successfully' });
+            }, 1000);
+        });
+    };
+
     const value = {
         user,
         login,
@@ -248,10 +358,14 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateProfile,
         deleteAccount,
+        changePassword,
         getUserFavorites,
         addToFavorites,
         removeFromFavorites,
         isMovieInFavorites,
+        isUserMovie,
+        deleteUserMovie,
+        updateUserMovie,
         loading
     };
 

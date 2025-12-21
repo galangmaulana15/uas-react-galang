@@ -9,7 +9,6 @@ export const validatePassword = (password) => {
 
 export const validateMovieForm = (data) => {
     const errors = {};
-    
     if (!data.title?.trim()) errors.title = 'Title is required';
     if (!data.description?.trim()) errors.description = 'Description is required';
     if (!data.rating || data.rating < 0 || data.rating > 10) errors.rating = 'Rating must be between 0-10';
