@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Image as ImageIcon, Calendar, Clock, Star, Globe } from 'lucide-react';
 import { validateMovieForm } from '../utils/validation';
 import { useAuth } from '../context/AuthContext';
 
+// ================================
+// ADD MOVIE COMPONENT
+// ================================
+// Komponen untuk menambahkan film baru oleh admin
 const AddMovie = () => {
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -16,13 +23,19 @@ const AddMovie = () => {
         poster: null
     });
     
-    const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState('');
+    const [errors, setErrors] = useState({});     // State untuk error validasi
+    const [loading, setLoading] = useState(false); // State untuk loading state
+    const [previewUrl, setPreviewUrl] = useState(''); // State untuk preview gambar
     
-    const { user } = useAuth();
-    const navigate = useNavigate();
+    // ================================
+    // HOOKS & CONTEXT
+    // ================================
+    const { user } = useAuth();     // Ambil user dari auth context
+    const navigate = useNavigate(); // Hook untuk navigasi
 
+    // ================================
+    // GENRE OPTIONS
+    // ================================
     const genreOptions = [
         { id: 28, name: 'Action' },
         { id: 12, name: 'Adventure' },
@@ -44,46 +57,113 @@ const AddMovie = () => {
         { id: 37, name: 'Western' }
     ];
 
+    // ================================
+    // EVENT HANDLERS
+    // ================================
+    
+    // Handler untuk input text/number
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+        // Clear error jika ada
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleGenreToggle = (genreId) => {
+    // PERBAIKAN: Gunakan useCallback untuk menghindari re-render yang tidak perlu
+    const handleGenreToggle = useCallback((genreId) => {
         setFormData(prev => ({
             ...prev,
             genres: prev.genres.includes(genreId)
                 ? prev.genres.filter(id => id !== genreId)
-                : [...prev.genres, genreId]
+                : [...prev.genres, genreId].slice(0, 5) // Batasi maksimal 5 genre
         }));
-    };
+    }, []);
 
+    // PERBAIKAN: Tambahkan validasi file dan cleanup
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setFormData(prev => ({ ...prev, poster: file }));
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result);
-            };
-            reader.readAsDataURL(file);
+        
+        if (!file) return;
+        
+        // Validasi tipe file
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+            setErrors(prev => ({
+                ...prev,
+                poster: 'Only JPEG, JPG, or PNG files are allowed'
+            }));
+            return;
         }
+        
+        // Validasi ukuran file (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            setErrors(prev => ({
+                ...prev,
+                poster: 'File size must be less than 5MB'
+            }));
+            return;
+        }
+        
+        // Clear error jika ada
+        if (errors.poster) {
+            setErrors(prev => ({ ...prev, poster: '' }));
+        }
+        
+        setFormData(prev => ({ ...prev, poster: file }));
+        
+        // Create FileReader untuk preview
+        const reader = new FileReader();
+        
+        // Cleanup function
+        const cleanup = () => {
+            if (reader.readyState === 1) { // LOADING
+                reader.abort();
+            }
+        };
+        
+        reader.onloadstart = () => {
+            console.log('Started reading file...');
+        };
+        
+        reader.onloadend = () => {
+            setPreviewUrl(reader.result);
+            // Cleanup setelah selesai
+            cleanup();
+        };
+        
+        reader.onerror = () => {
+            console.error('Error reading file');
+            setErrors(prev => ({ ...prev, poster: 'Error reading image file' }));
+            cleanup();
+        };
+        
+        reader.readAsDataURL(file);
+        
+        // Return cleanup function
+        return cleanup;
     };
 
     const removeImage = () => {
         setFormData(prev => ({ ...prev, poster: null }));
         setPreviewUrl('');
+        if (errors.poster) {
+            setErrors(prev => ({ ...prev, poster: '' }));
+        }
     };
 
+    // ================================
+    // FORM SUBMISSION
+    // ================================
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Validasi form
         const validationErrors = validateMovieForm(formData);
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
@@ -93,7 +173,7 @@ const AddMovie = () => {
         setLoading(true);
 
         try {
-            // Simulate API call
+            // Simulate API call delay
             await new Promise(resolve => setTimeout(resolve, 1500));
             
             // Create movie object
@@ -103,7 +183,7 @@ const AddMovie = () => {
                 overview: formData.description,
                 vote_average: parseFloat(formData.rating),
                 release_date: formData.releaseDate,
-                runtime: parseInt(formData.runtime),
+                runtime: parseInt(formData.runtime) || 0,
                 original_language: formData.language,
                 genre_ids: formData.genres,
                 poster_path: '/placeholder.jpg', // In real app, upload to server
@@ -111,23 +191,30 @@ const AddMovie = () => {
                 popularity: 50,
                 vote_count: 0,
                 _timestamp: Date.now(),
-                _userAdded: user?.email
+                _userAdded: user?.email,
+                _userId: user?.id,
+                _createdAt: new Date().toISOString(),
+                _status: 'pending' // Status untuk moderasi
             };
 
             // Save to localStorage (simulating database)
             const existingMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
             localStorage.setItem('user_movies', JSON.stringify([...existingMovies, newMovie]));
 
-            alert('Movie added successfully!');
+            // Success message
+            alert('Movie added successfully! It will be reviewed by admin.');
             navigate('/movies');
         } catch (error) {
+            console.error('Error adding movie:', error);
             alert('Error adding movie. Please try again.');
-            console.error('Error:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    // ================================
+    // FORM RESET
+    // ================================
     const resetForm = () => {
         setFormData({
             title: '',
@@ -143,17 +230,30 @@ const AddMovie = () => {
         setPreviewUrl('');
     };
 
+    // ================================
+    // ACCESS CONTROL
+    // ================================
+    // Cek apakah user adalah admin
     if (!user || user.role !== 'admin') {
         return (
             <div className="min-h-screen flex items-center justify-center text-white">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
                     <p className="text-gray-400">You need admin privileges to access this page.</p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                        Return to Home
+                    </button>
                 </div>
             </div>
         );
     }
 
+    // ================================
+    // RENDER COMPONENT
+    // ================================
     return (
         <div className="min-h-screen text-white py-8">
             <div className="container mx-auto px-4">
@@ -165,12 +265,12 @@ const AddMovie = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        {/* Basic Info */}
+                        {/* Basic Info Section */}
                         <div className="bg-gray-800 rounded-xl p-6">
                             <h2 className="text-2xl font-bold mb-6">Basic Information</h2>
                             
                             <div className="grid md:grid-cols-2 gap-6">
-                                {/* Title */}
+                                {/* Title Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         Movie Title *
@@ -182,13 +282,14 @@ const AddMovie = () => {
                                         onChange={handleChange}
                                         className={`w-full px-4 py-3 bg-gray-900 border ${errors.title ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                         placeholder="Enter movie title"
+                                        required
                                     />
                                     {errors.title && (
                                         <p className="mt-1 text-sm text-red-400">{errors.title}</p>
                                     )}
                                 </div>
 
-                                {/* Rating */}
+                                {/* Rating Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         Rating (0-10) *
@@ -205,6 +306,7 @@ const AddMovie = () => {
                                             onChange={handleChange}
                                             className={`w-full pl-10 pr-4 py-3 bg-gray-900 border ${errors.rating ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                             placeholder="8.5"
+                                            required
                                         />
                                     </div>
                                     {errors.rating && (
@@ -212,7 +314,7 @@ const AddMovie = () => {
                                     )}
                                 </div>
 
-                                {/* Release Date */}
+                                {/* Release Date Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         Release Date *
@@ -225,6 +327,7 @@ const AddMovie = () => {
                                             value={formData.releaseDate}
                                             onChange={handleChange}
                                             className={`w-full pl-10 pr-4 py-3 bg-gray-900 border ${errors.releaseDate ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                                            required
                                         />
                                     </div>
                                     {errors.releaseDate && (
@@ -232,7 +335,7 @@ const AddMovie = () => {
                                     )}
                                 </div>
 
-                                {/* Runtime */}
+                                {/* Runtime Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         Runtime (minutes)
@@ -243,6 +346,7 @@ const AddMovie = () => {
                                             type="number"
                                             name="runtime"
                                             min="1"
+                                            max="600"
                                             value={formData.runtime}
                                             onChange={handleChange}
                                             className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -251,7 +355,7 @@ const AddMovie = () => {
                                     </div>
                                 </div>
 
-                                {/* Language */}
+                                {/* Language Select */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         Language
@@ -276,7 +380,7 @@ const AddMovie = () => {
                                 </div>
                             </div>
 
-                            {/* Description */}
+                            {/* Description Textarea */}
                             <div className="mt-6">
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
                                     Description *
@@ -288,6 +392,7 @@ const AddMovie = () => {
                                     rows="4"
                                     className={`w-full px-4 py-3 bg-gray-900 border ${errors.description ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                     placeholder="Enter movie description..."
+                                    required
                                 />
                                 {errors.description && (
                                     <p className="mt-1 text-sm text-red-400">{errors.description}</p>
@@ -295,38 +400,63 @@ const AddMovie = () => {
                             </div>
                         </div>
 
-                        {/* Genres */}
+                        {/* Genres Selection */}
                         <div className="bg-gray-800 rounded-xl p-6">
-                            <h2 className="text-2xl font-bold mb-6">Genres</h2>
+                            <h2 className="text-2xl font-bold mb-6">Genres (Max 5)</h2>
                             <div className="flex flex-wrap gap-3">
                                 {genreOptions.map((genre) => (
                                     <button
                                         type="button"
                                         key={genre.id}
                                         onClick={() => handleGenreToggle(genre.id)}
-                                        className={`px-4 py-2 rounded-full transition-colors ${formData.genres.includes(genre.id) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                                        className={`px-4 py-2 rounded-full transition-colors ${formData.genres.includes(genre.id) 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        } ${formData.genres.length >= 5 && !formData.genres.includes(genre.id) 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : ''
+                                        }`}
+                                        disabled={formData.genres.length >= 5 && !formData.genres.includes(genre.id)}
+                                        title={formData.genres.length >= 5 && !formData.genres.includes(genre.id) 
+                                            ? 'Maximum 5 genres allowed' 
+                                            : ''
+                                        }
                                     >
                                         {genre.name}
+                                        {formData.genres.includes(genre.id) && (
+                                            <span className="ml-2">✓</span>
+                                        )}
                                     </button>
                                 ))}
                             </div>
+                            <p className="text-gray-400 text-sm mt-4">
+                                Selected: {formData.genres.length} / 5
+                            </p>
                         </div>
 
-                        {/* Poster Upload */}
+                        {/* Poster Upload Section */}
                         <div className="bg-gray-800 rounded-xl p-6">
-                            <h2 className="text-2xl font-bold mb-6">Movie Poster</h2>
+                            <h2 className="text-2xl font-bold mb-6">Movie Poster *</h2>
+                            
+                            {/* Error message for poster */}
+                            {errors.poster && (
+                                <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg">
+                                    <p className="text-red-400">{errors.poster}</p>
+                                </div>
+                            )}
                             
                             {previewUrl ? (
                                 <div className="relative">
                                     <img
                                         src={previewUrl}
                                         alt="Preview"
-                                        className="w-64 h-96 object-cover rounded-lg"
+                                        className="w-64 h-96 object-cover rounded-lg shadow-lg"
                                     />
                                     <button
                                         type="button"
                                         onClick={removeImage}
-                                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full"
+                                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg"
+                                        aria-label="Remove image"
                                     >
                                         <X size={20} />
                                     </button>
@@ -337,9 +467,10 @@ const AddMovie = () => {
                                     <label className="cursor-pointer">
                                         <input
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/jpeg, image/jpg, image/png"
                                             onChange={handleImageChange}
                                             className="hidden"
+                                            required={!formData.poster}
                                         />
                                         <div className="inline-flex items-center space-x-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors">
                                             <Upload size={20} />
@@ -347,7 +478,7 @@ const AddMovie = () => {
                                         </div>
                                     </label>
                                     <p className="text-gray-400 mt-4 text-sm">
-                                        Recommended: 500x750px, JPEG or PNG
+                                        Recommended: 500x750px, JPEG or PNG, Max 5MB
                                     </p>
                                 </div>
                             )}
@@ -375,7 +506,10 @@ const AddMovie = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${loading ? 'bg-blue-800 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${loading 
+                                        ? 'bg-blue-800 cursor-not-allowed' 
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                    }`}
                                 >
                                     {loading ? (
                                         <div className="flex items-center">

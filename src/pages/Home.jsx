@@ -3,47 +3,43 @@ import React, { useState, useEffect, useRef } from 'react';
 // Import komponen Link untuk navigasi dari react-router-dom
 import { Link } from 'react-router-dom';
 // Import ikon-ikon dari lucide-react
-import { Play, TrendingUp, Star, Calendar, Heart, ChevronLeft, ChevronRight, Film, Clock, Zap } from 'lucide-react';
+import { Play, TrendingUp, Star, Calendar, Heart, ChevronLeft, ChevronRight, Film, Clock, Zap, Home as HomeIcon } from 'lucide-react';
 // Import komponen MovieCard
 import MovieCard from '../components/MovieCard';
 // Import komponen MovieModal
 import MovieModal from '../components/MovieModal';
 // Import fungsi API untuk mendapatkan film berdasarkan kategori
-import { getMoviesByCategory } from '../services/api';
+import { getMoviesByCategory, getImageUrl } from '../services/api';
+// PERBAIKAN: Import useAuth untuk akses fungsi favorites yang benar
+import { useAuth } from '../context/AuthContext';
 
 // Komponen Home untuk halaman utama
 const Home = () => {
-    // State untuk menyimpan film populer
-    const [popularMovies, setPopularMovies] = useState([]);
-    // State untuk menyimpan film dengan rating tertinggi
-    const [topRatedMovies, setTopRatedMovies] = useState([]);
-    // State untuk menyimpan film yang akan datang
-    const [upcomingMovies, setUpcomingMovies] = useState([]);
-    // State untuk menyimpan film yang sedang tayang
-    const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
-    // State untuk status loading
-    const [loading, setLoading] = useState(true);
-    // State untuk slide carousel saat ini
-    const [currentSlide, setCurrentSlide] = useState(0);
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
+    const [popularMovies, setPopularMovies] = useState([]);      // Film populer
+    const [topRatedMovies, setTopRatedMovies] = useState([]);    // Film rating tertinggi
+    const [upcomingMovies, setUpcomingMovies] = useState([]);    // Film yang akan datang
+    const [nowPlayingMovies, setNowPlayingMovies] = useState([]); // Film yang sedang tayang
+    const [loading, setLoading] = useState(true);                 // Status loading
+    const [currentSlide, setCurrentSlide] = useState(0);          // Slide carousel saat ini
     
     // State untuk MovieModal
     const [selectedMovieId, setSelectedMovieId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    // State untuk daftar favorit
-    const [favorites, setFavorites] = useState([]);
-
     // Ref untuk carousel
     const carouselRef = useRef(null);
     // Total slide carousel
     const totalSlides = 4;
 
-    // Effect untuk memuat favorit dari localStorage saat komponen mount
-    useEffect(() => {
-        const savedFavorites = JSON.parse(localStorage.getItem('roncomovie_favorites') || '[]');
-        setFavorites(savedFavorites);
-    }, []);
+    // PERBAIKAN: Gunakan useAuth untuk akses fungsi favorites yang benar
+    const { user, addToFavorites, removeFromFavorites, isMovieInFavorites, getUserFavorites } = useAuth();
 
+    // ================================
+    // EFFECT UNTUK LOAD DATA
+    // ================================
     // Effect untuk mengambil data film dari API
     useEffect(() => {
         const fetchMovies = async () => {
@@ -60,7 +56,7 @@ const Home = () => {
                 // Set data ke state dengan jumlah yang dibatasi
                 setPopularMovies(popularData.movies.slice(0, 16));
                 setTopRatedMovies(topRatedData.movies.slice(0, 8));
-                setUpcomingMovies(upcomingData.movies.slice(1,5));
+                setUpcomingMovies(upcomingData.movies.slice(1, 5));
                 setNowPlayingMovies(nowPlayingData.movies.slice(0, 8));
             } catch (error) {
                 console.error('Error fetching movies:', error);
@@ -87,50 +83,23 @@ const Home = () => {
         }
     }, [currentSlide]);
 
-    // Fungsi untuk toggle favorite (menambah/menghapus dari favorit)
+    // ================================
+    // FUNGSI UTILITAS
+    // ================================
+    // PERBAIKAN: Gunakan fungsi dari AuthContext untuk toggle favorite
     const toggleFavorite = (movie) => {
-        // 1. Baca dari localStorage
-        const savedFavorites = JSON.parse(localStorage.getItem('roncomovie_favorites') || '[]');
-        
-        // 2. Cek apakah sudah favorite
-        const isCurrentlyFavorite = savedFavorites.some(fav => fav.id === movie.id);
-        
-        let updatedFavorites;
-        
-        if (isCurrentlyFavorite) {
-            // Hapus dari favorites
-            updatedFavorites = savedFavorites.filter(fav => fav.id !== movie.id);
-        } else {
-            // Tambah ke favorites dengan data lengkap
-            const movieWithDetails = {
-                id: movie.id,
-                title: movie.title,
-                poster_path: movie.poster_path,
-                backdrop_path: movie.backdrop_path,
-                vote_average: movie.vote_average,
-                release_date: movie.release_date,
-                overview: movie.overview,
-                genre_ids: movie.genre_ids || [],
-                _timestamp: Date.now(),
-                _addedDate: new Date().toISOString()
-            };
-            
-            updatedFavorites = [...savedFavorites, movieWithDetails];
+        if (!user) {
+            alert('Please login to add movies to favorites');
+            return false;
         }
         
-        // 3. Simpan ke localStorage
-        localStorage.setItem('roncomovie_favorites', JSON.stringify(updatedFavorites));
-        
-        // 4. Update state
-        setFavorites(updatedFavorites);
-        
-        // Return status baru
-        return !isCurrentlyFavorite;
-    };
-
-    // Fungsi untuk mengecek apakah film sudah difavoritkan
-    const isFavorite = (movieId) => {
-        return favorites.some(fav => fav.id === movieId);
+        if (isMovieInFavorites(movie.id)) {
+            removeFromFavorites(movie.id);
+            return false;
+        } else {
+            addToFavorites(movie);
+            return true;
+        }
     };
 
     // Fungsi untuk membuka modal
@@ -188,10 +157,15 @@ const Home = () => {
                                     animationDuration: `${20 + index * 5}s`
                                 }}
                             >
+                                {/* PERBAIKAN: Gunakan getImageUrl */}
                                 <img
-                                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                                    src={getImageUrl(movie.poster_path, 'w500')}
                                     alt={movie.title}
                                     className="w-full h-full object-cover rounded-lg"
+                                    onError={(e) => {
+                                        e.target.src = '/placeholder-movie.jpg';
+                                        e.target.onerror = null;
+                                    }}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
@@ -266,19 +240,24 @@ const Home = () => {
                                             >
                                                 <div className="relative overflow-hidden rounded-xl shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl">
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                                                    {/* PERBAIKAN: Gunakan getImageUrl */}
                                                     <img
-                                                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                                                        src={getImageUrl(movie.poster_path, 'w500')}
                                                         alt={movie.title}
                                                         className="w-full h-96 object-cover transform transition-transform duration-700 group-hover:scale-110"
+                                                        onError={(e) => {
+                                                            e.target.src = '/placeholder-movie.jpg';
+                                                            e.target.onerror = null;
+                                                        }}
                                                     />
                                                     <div className="absolute bottom-0 left-0 right-0 p-6 z-20 transform transition-all duration-300 group-hover:translate-y-0">
                                                         <h3 className="text-xl font-bold mb-1 truncate">{movie.title}</h3>
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center space-x-2">
                                                                 <Star className="h-4 w-4 text-yellow-400" />
-                                                                <span className="font-semibold">{movie.vote_average.toFixed(1)}</span>
+                                                                <span className="font-semibold">{movie.vote_average?.toFixed(1) || 'N/A'}</span>
                                                             </div>
-                                                            <span className="text-gray-300 text-sm">{movie.release_date.split('-')[0]}</span>
+                                                            <span className="text-gray-300 text-sm">{movie.release_date?.split('-')[0] || 'N/A'}</span>
                                                         </div>
                                                     </div>
                                                     <div className="absolute top-4 right-4 z-20">
@@ -289,9 +268,10 @@ const Home = () => {
                                                             }}
                                                             className="p-2 bg-black/50 rounded-full backdrop-blur-sm hover:bg-red-500/20 transition-colors"
                                                         >
+                                                            {/* PERBAIKAN: Gunakan isMovieInFavorites dari AuthContext */}
                                                             <Heart 
                                                                 size={20} 
-                                                                className={isFavorite(movie.id) ? "fill-red-500 text-red-500" : "text-white"}
+                                                                className={isMovieInFavorites(movie.id) ? "fill-red-500 text-red-500" : "text-white"}
                                                             />
                                                         </button>
                                                     </div>
@@ -311,10 +291,15 @@ const Home = () => {
                                                     onClick={() => handleOpenModal(popularMovies[slideIndex * 3 + 3].id)}
                                                 >
                                                     <div className="relative overflow-hidden rounded-xl shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl">
+                                                        {/* PERBAIKAN: Gunakan getImageUrl */}
                                                         <img
-                                                            src={`https://image.tmdb.org/t/p/w500${popularMovies[slideIndex * 3 + 3].poster_path}`}
+                                                            src={getImageUrl(popularMovies[slideIndex * 3 + 3].poster_path, 'w500')}
                                                             alt={popularMovies[slideIndex * 3 + 3].title}
                                                             className="w-full h-96 object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                                                            onError={(e) => {
+                                                                e.target.src = '/placeholder-movie.jpg';
+                                                                e.target.onerror = null;
+                                                            }}
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                         <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -333,12 +318,14 @@ const Home = () => {
                         <button
                             onClick={prevSlide}
                             className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-all z-30"
+                            aria-label="Previous slide"
                         >
                             <ChevronLeft className="h-6 w-6" />
                         </button>
                         <button
                             onClick={nextSlide}
                             className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-all z-30"
+                            aria-label="Next slide"
                         >
                             <ChevronRight className="h-6 w-6" />
                         </button>
@@ -354,6 +341,7 @@ const Home = () => {
                                             ? 'w-8 bg-gradient-to-r from-red-500 to-orange-500' 
                                             : 'w-2 bg-gray-600 hover:bg-gray-500'
                                     }`}
+                                    aria-label={`Go to slide ${index + 1}`}
                                 />
                             ))}
                         </div>
@@ -363,10 +351,11 @@ const Home = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
                         {popularMovies.slice(12, 20).map((movie, index) => (
                             <div key={movie.id} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                                {/* PERBAIKAN: Gunakan isMovieInFavorites dari AuthContext */}
                                 <MovieCard
                                     movie={movie}
-                                    onFavoriteToggle={toggleFavorite}
-                                    isFavorite={isFavorite(movie.id)}
+                                    onFavoriteToggle={() => toggleFavorite(movie)}
+                                    isFavorite={isMovieInFavorites(movie.id)}
                                     onQuickView={() => handleOpenModal(movie.id)}
                                 />
                             </div>
@@ -401,21 +390,26 @@ const Home = () => {
                                     >
                                         <div className="flex">
                                             <div className="w-1/3">
+                                                {/* PERBAIKAN: Gunakan getImageUrl */}
                                                 <img
-                                                    src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                                                    src={getImageUrl(movie.poster_path, 'w200')}
                                                     alt={movie.title}
                                                     className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
+                                                    onError={(e) => {
+                                                        e.target.src = '/placeholder-movie.jpg';
+                                                        e.target.onerror = null;
+                                                    }}
                                                 />
                                             </div>
                                             <div className="w-2/3 p-4">
                                                 <h4 className="font-bold mb-1 truncate group-hover:text-green-300 transition-colors">{movie.title}</h4>
                                                 <div className="flex items-center space-x-2 mb-2">
                                                     <Star className="h-3 w-3 text-yellow-400" />
-                                                    <span className="text-sm">{movie.vote_average.toFixed(1)}</span>
+                                                    <span className="text-sm">{movie.vote_average?.toFixed(1) || 'N/A'}</span>
                                                     <span className="text-xs text-gray-400">•</span>
-                                                    <span className="text-xs text-gray-400">{movie.release_date}</span>
+                                                    <span className="text-xs text-gray-400">{movie.release_date || 'N/A'}</span>
                                                 </div>
-                                                <p className="text-sm text-gray-300 line-clamp-2">{movie.overview}</p>
+                                                <p className="text-sm text-gray-300 line-clamp-2">{movie.overview || 'No overview available.'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -445,10 +439,15 @@ const Home = () => {
                                     >
                                         <div className="flex">
                                             <div className="w-1/3 relative">
+                                                {/* PERBAIKAN: Gunakan getImageUrl */}
                                                 <img
-                                                    src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                                                    src={getImageUrl(movie.poster_path, 'w200')}
                                                     alt={movie.title}
                                                     className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.src = '/placeholder-movie.jpg';
+                                                        e.target.onerror = null;
+                                                    }}
                                                 />
                                                 <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">
                                                     #{index + 1}
@@ -458,11 +457,11 @@ const Home = () => {
                                                 <h4 className="font-bold mb-1 truncate group-hover:text-yellow-300 transition-colors">{movie.title}</h4>
                                                 <div className="flex items-center space-x-2 mb-2">
                                                     <Star className="h-3 w-3 text-yellow-400" />
-                                                    <span className="text-sm font-bold">{movie.vote_average.toFixed(1)}</span>
+                                                    <span className="text-sm font-bold">{movie.vote_average?.toFixed(1) || 'N/A'}</span>
                                                     <span className="text-xs text-gray-400">•</span>
-                                                    <span className="text-xs text-gray-400">{movie.vote_count} votes</span>
+                                                    <span className="text-xs text-gray-400">{movie.vote_count || 0} votes</span>
                                                 </div>
-                                                <p className="text-sm text-gray-300 line-clamp-2">{movie.overview}</p>
+                                                <p className="text-sm text-gray-300 line-clamp-2">{movie.overview || 'No overview available.'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -496,16 +495,21 @@ const Home = () => {
                                 onClick={() => handleOpenModal(movie.id)}
                             >
                                 <div className="relative h-64 overflow-hidden">
+                                    {/* PERBAIKAN: Gunakan getImageUrl */}
                                     <img
-                                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                                        src={getImageUrl(movie.poster_path, 'w500')}
                                         alt={movie.title}
                                         className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
+                                        onError={(e) => {
+                                            e.target.src = '/placeholder-movie.jpg';
+                                            e.target.onerror = null;
+                                        }}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                     <div className="absolute bottom-4 left-4 right-4">
                                         <h4 className="font-bold text-lg truncate">{movie.title}</h4>
                                         <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-300">{movie.release_date}</span>
+                                            <span className="text-gray-300">{movie.release_date || 'Coming Soon'}</span>
                                             <span className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full text-xs">
                                                 Coming Soon
                                             </span>
@@ -515,7 +519,7 @@ const Home = () => {
                                 <div className="p-4">
                                     <div className="flex items-center space-x-2 mb-2">
                                         <Star className="h-4 w-4 text-yellow-400" />
-                                        <span>{movie.vote_average.toFixed(1)}</span>
+                                        <span>{movie.vote_average?.toFixed(1) || 'N/A'}</span>
                                     </div>
                                     <p className="text-sm text-gray-300 line-clamp-2">{movie.overview || 'Synopsis coming soon...'}</p>
                                     <button 
@@ -538,25 +542,25 @@ const Home = () => {
             <section className="py-12 px-4 bg-gradient-to-r from-gray-900/50 to-black/50">
                 <div className="container mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="bg-gradient-to-br from-blue-900/30 to-blue-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-blue-800/50">
+                        <div className="bg-gradient-to-br from-blue-900/30 to-blue-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-blue-800/50 hover:border-blue-700/50 transition-colors">
                             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                                 {popularMovies.length}+
                             </div>
                             <div className="text-gray-300 mt-2">Popular Movies</div>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-900/30 to-purple-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-purple-800/50">
+                        <div className="bg-gradient-to-br from-purple-900/30 to-purple-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-purple-800/50 hover:border-purple-700/50 transition-colors">
                             <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                                 {topRatedMovies.length}+
                             </div>
                             <div className="text-gray-300 mt-2">Top Rated</div>
                         </div>
-                        <div className="bg-gradient-to-br from-green-900/30 to-green-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-green-800/50">
+                        <div className="bg-gradient-to-br from-green-900/30 to-green-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-green-800/50 hover:border-green-700/50 transition-colors">
                             <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                                 {upcomingMovies.length}+
                             </div>
                             <div className="text-gray-300 mt-2">Coming Soon</div>
                         </div>
-                        <div className="bg-gradient-to-br from-red-900/30 to-red-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-red-800/50">
+                        <div className="bg-gradient-to-br from-red-900/30 to-red-700/30 p-6 rounded-2xl text-center backdrop-blur-sm border border-red-800/50 hover:border-red-700/50 transition-colors">
                             <div className="text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
                                 {nowPlayingMovies.length}+
                             </div>
@@ -572,7 +576,7 @@ const Home = () => {
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onFavoriteToggle={toggleFavorite}
-                isFavorite={selectedMovieId ? isFavorite(selectedMovieId) : false}
+                isFavorite={selectedMovieId ? isMovieInFavorites(selectedMovieId) : false}
             />
         </div>
     );

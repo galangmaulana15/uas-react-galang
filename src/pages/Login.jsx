@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // Import komponen navigasi dari react-router-dom
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 // Import ikon-ikon dari lucide-react
-import { Film, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Film, Mail, Lock, AlertCircle, Eye, EyeOff, ChevronLeft } from 'lucide-react'; // PERBAIKAN: Tambah ChevronLeft
 // Import context autentikasi
 import { useAuth } from '../context/AuthContext';
 // Import fungsi validasi email dan password
@@ -11,31 +11,34 @@ import { validateEmail, validatePassword } from '../utils/validation';
 
 // Komponen Login untuk halaman masuk pengguna
 const Login = () => {
-    // State untuk data form login
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
-    // State untuk error validasi form
-    const [errors, setErrors] = useState({});
-    // State untuk status loading saat proses login
-    const [loading, setLoading] = useState(false);
-    // State untuk error dari API/server
-    const [apiError, setApiError] = useState('');
-    // State untuk menampilkan password
-    const [showPassword, setShowPassword] = useState(false);
-    // State untuk mengingat saya
-    const [rememberMe, setRememberMe] = useState(false);
+    const [errors, setErrors] = useState({});      // State untuk error validasi form
+    const [loading, setLoading] = useState(false); // State untuk status loading
+    const [apiError, setApiError] = useState('');   // State untuk error dari API/server
+    const [showPassword, setShowPassword] = useState(false); // State untuk menampilkan password
     
-    // Mendapatkan fungsi login dari context auth
-    const { login } = useAuth();
-    // Hook untuk navigasi halaman
-    const navigate = useNavigate();
-    // Hook untuk mendapatkan informasi lokasi saat ini
-    const location = useLocation();
+    // PERBAIKAN: Hapus rememberMe jika tidak digunakan, atau implementasi
+    const [rememberMe, setRememberMe] = useState(false); // State untuk mengingat saya
+
+    // ================================
+    // HOOKS & CONTEXT
+    // ================================
+    const { login } = useAuth();       // Mendapatkan fungsi login dari context auth
+    const navigate = useNavigate();    // Hook untuk navigasi halaman
+    const location = useLocation();    // Hook untuk mendapatkan informasi lokasi saat ini
+    
     // Mendapatkan halaman sebelumnya dari state location
     const from = location.state?.from?.pathname || '/';
 
+    // ================================
+    // EVENT HANDLERS
+    // ================================
     // Handler untuk perubahan input form
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -92,6 +95,7 @@ const Login = () => {
         setApiError('');
 
         try {
+            // PERBAIKAN: Jika rememberMe diimplementasikan, bisa tambahkan parameter
             // Panggil fungsi login dari context
             const result = await login(formData.email, formData.password);
             
@@ -108,6 +112,9 @@ const Login = () => {
         }
     };
 
+    // ================================
+    // RENDER COMPONENT
+    // ================================
     return (
         // Container utama
         <div className="min-h-screen flex items-center justify-center p-4">
@@ -131,9 +138,9 @@ const Login = () => {
                 <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-700/50">
                     {/* Error message dari API */}
                     {apiError && (
-                        <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center space-x-3">
-                            <AlertCircle className="h-5 w-5 text-red-400" />
-                            <span className="text-red-300">{apiError}</span>
+                        <div className="mb-6 p-4 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center space-x-3 animate-fade-in">
+                            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                            <span className="text-red-300 text-sm">{apiError}</span>
                         </div>
                     )}
 
@@ -157,12 +164,13 @@ const Login = () => {
                                     onChange={handleChange}
                                     className={`w-full pl-10 pr-3 py-3 bg-gray-900/70 border ${errors.email ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
                                     placeholder="Enter your email"
+                                    disabled={loading}
                                 />
                             </div>
                             {/* Error message untuk email */}
                             {errors.email && (
-                                <p className="mt-2 text-sm text-red-400 flex items-center">
-                                    <AlertCircle className="h-4 w-4 mr-1" />
+                                <p className="mt-2 text-sm text-red-400 flex items-center animate-fade-in">
+                                    <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
                                     {errors.email}
                                 </p>
                             )}
@@ -178,18 +186,19 @@ const Login = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                                    className="text-sm text-gray-400 hover:text-white transition-colors flex items-center"
+                                    disabled={loading}
                                 >
                                     {showPassword ? (
-                                        <span className="flex items-center">
+                                        <>
                                             <EyeOff className="h-4 w-4 mr-1" />
                                             Hide
-                                        </span>
+                                        </>
                                     ) : (
-                                        <span className="flex items-center">
+                                        <>
                                             <Eye className="h-4 w-4 mr-1" />
                                             Show
-                                        </span>
+                                        </>
                                     )}
                                 </button>
                             </div>
@@ -206,12 +215,13 @@ const Login = () => {
                                     onChange={handleChange}
                                     className={`w-full pl-10 pr-10 py-3 bg-gray-900/70 border ${errors.password ? 'border-red-500' : 'border-gray-700'} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
                                     placeholder="Enter your password"
+                                    disabled={loading}
                                 />
                             </div>
                             {/* Error message untuk password */}
                             {errors.password && (
-                                <p className="mt-2 text-sm text-red-400 flex items-center">
-                                    <AlertCircle className="h-4 w-4 mr-1" />
+                                <p className="mt-2 text-sm text-red-400 flex items-center animate-fade-in">
+                                    <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
                                     {errors.password}
                                 </p>
                             )}
@@ -220,12 +230,13 @@ const Login = () => {
                         {/* Remember me dan forgot password */}
                         <div className="flex items-center justify-between">
                             {/* Checkbox remember me */}
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                    className="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800 focus:ring-2"
+                                    disabled={loading}
                                 />
                                 <span className="ml-2 text-sm text-gray-300">Remember me</span>
                             </label>
@@ -233,7 +244,8 @@ const Login = () => {
                             {/* Link forgot password */}
                             <Link
                                 to="/forgot-password"
-                                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                                className="text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+                                tabIndex={loading ? -1 : 0}
                             >
                                 Forgot password?
                             </Link>
@@ -243,7 +255,10 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 ${loading ? 'bg-blue-800 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'}`}
+                            className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 ${loading 
+                                ? 'bg-blue-800 cursor-not-allowed opacity-80' 
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                            }`}
                         >
                             {loading ? (
                                 // Tampilan saat loading
@@ -270,7 +285,8 @@ const Login = () => {
                         <div className="text-center">
                             <Link
                                 to="/register"
-                                className="inline-block w-full py-3 border-2 border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 rounded-lg font-medium transition-all duration-300"
+                                className="inline-block w-full py-3 border-2 border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 rounded-lg font-medium transition-all duration-300 disabled:opacity-50"
+                                tabIndex={loading ? -1 : 0}
                             >
                                 Create an account
                             </Link>
@@ -287,11 +303,11 @@ const Login = () => {
                 <div className="mt-8 text-center">
                     <Link
                         to="/"
-                        className="inline-flex items-center text-gray-400 hover:text-white transition-colors group"
+                        className="inline-flex items-center text-gray-400 hover:text-white transition-colors group disabled:opacity-50"
+                        tabIndex={loading ? -1 : 0}
                     >
-                        <svg className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
+                        {/* PERBAIKAN: Ganti inline SVG dengan ChevronLeft dari lucide-react */}
+                        <ChevronLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                         Back to home
                     </Link>
                 </div>

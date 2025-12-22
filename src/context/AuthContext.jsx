@@ -1,34 +1,64 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
+// ================================
+// CREATE AUTH CONTEXT
+// ================================
 const AuthContext = createContext();
 
+// Custom hook untuk mengakses context
 export const useAuth = () => useContext(AuthContext);
 
+// ================================
+// AUTH PROVIDER COMPONENT
+// ================================
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
+    const [user, setUser] = useState(null);      // State untuk user yang login
+    const [loading, setLoading] = useState(true); // State untuk loading status
 
+    // ================================
+    // EFFECT UNTUK CHECK LOGIN STATE
+    // ================================
     useEffect(() => {
-        // Check localStorage for user on mount
+        // Check localStorage untuk user saat komponen mount
         const savedUser = localStorage.getItem('roncomovie_user');
         if (savedUser) {
-            const userData = JSON.parse(savedUser);
-            setUser(userData);
+            try {
+                const userData = JSON.parse(savedUser);
+                setUser(userData);
+            } catch (error) {
+                console.error('Error parsing saved user:', error);
+                localStorage.removeItem('roncomovie_user'); // Hapus data corrupt
+            }
         }
         setLoading(false);
     }, []);
 
-    // Helper function to get user-specific favorites key
+    // ================================
+    // HELPER FUNCTIONS
+    // ================================
+    
+    // Helper untuk mendapatkan key favorites berdasarkan user ID
     const getUserFavoritesKey = (userId) => `roncomovie_favorites_${userId}`;
 
+    // ================================
+    // AUTHENTICATION FUNCTIONS
+    // ================================
+    
+    // Fungsi login
     const login = (email, password) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
+                // PERBAIKAN: Email case-insensitive comparison
+                const normalizedEmail = email.toLowerCase().trim();
+                
                 // Admin account
-                if (email === 'admin@ronco.com' && password === 'admin123') {
+                if (normalizedEmail === 'admin@ronco.com' && password === 'admin123') {
                     const userData = {
                         id: 'admin_001',
-                        email,
+                        email: normalizedEmail,
                         name: 'Admin Ronco',
                         role: 'admin',
                         joinedDate: new Date().toISOString(),
@@ -43,7 +73,10 @@ export const AuthProvider = ({ children }) => {
                 // Check for existing users
                 else {
                     const users = JSON.parse(localStorage.getItem('roncomovie_users') || '[]');
-                    const existingUser = users.find(u => u.email === email && u.password === password);
+                    // PERBAIKAN: Case-insensitive email comparison
+                    const existingUser = users.find(u => 
+                        u.email.toLowerCase() === normalizedEmail && u.password === password
+                    );
                     
                     if (existingUser) {
                         // Remove password from user object in state
@@ -60,12 +93,18 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    // Fungsi register
     const register = (email, password, name) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
+                // PERBAIKAN: Normalize email
+                const normalizedEmail = email.toLowerCase().trim();
+                const normalizedName = name.trim();
+                
                 // Check if user already exists
                 const users = JSON.parse(localStorage.getItem('roncomovie_users') || '[]');
-                const userExists = users.some(u => u.email === email);
+                // PERBAIKAN: Case-insensitive check
+                const userExists = users.some(u => u.email.toLowerCase() === normalizedEmail);
                 
                 if (userExists) {
                     reject({ success: false, message: 'Email already registered' });
@@ -76,9 +115,9 @@ export const AuthProvider = ({ children }) => {
                 const userId = 'user_' + Date.now();
                 const newUser = {
                     id: userId,
-                    email,
-                    password,
-                    name,
+                    email: normalizedEmail,
+                    password, // PERBAIKAN: Password harus di-hash di production
+                    name: normalizedName,
                     role: 'user',
                     joinedDate: new Date().toISOString(),
                     profile: {
@@ -97,7 +136,7 @@ export const AuthProvider = ({ children }) => {
                 // Initialize user-specific favorites
                 localStorage.setItem(getUserFavoritesKey(userId), JSON.stringify([]));
                 
-                // Login the new user
+                // Login the new user (remove password from state)
                 const { password: _, ...userWithoutPassword } = newUser;
                 
                 setUser(userWithoutPassword);
@@ -108,11 +147,13 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    // Fungsi logout
     const logout = () => {
         setUser(null);
         localStorage.removeItem('roncomovie_user');
     };
 
+    // Fungsi update profile
     const updateProfile = (updatedData) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -122,24 +163,27 @@ export const AuthProvider = ({ children }) => {
                         return;
                     }
 
-                    // Update in current user
+                    // Update in current user (without password)
                     const updatedUser = { 
                         ...user, 
                         ...updatedData,
-                        id: user.id
+                        id: user.id // Pastikan ID tidak berubah
                     };
                     
                     setUser(updatedUser);
                     localStorage.setItem('roncomovie_user', JSON.stringify(updatedUser));
                     
-                    // Update in users list
+                    // Update in users list (with password)
                     const users = JSON.parse(localStorage.getItem('roncomovie_users') || '[]');
                     const userIndex = users.findIndex(u => u.id === user.id);
                     
                     if (userIndex !== -1) {
+                        // PERBAIKAN: Jangan timpa password dengan updatedData
+                        const { password: currentPassword } = users[userIndex];
                         const updatedUserWithPassword = {
                             ...users[userIndex],
-                            ...updatedData
+                            ...updatedData,
+                            password: currentPassword // Pertahankan password
                         };
                         
                         users[userIndex] = updatedUserWithPassword;
@@ -154,7 +198,7 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    // PERBAIKAN: Tambahkan validasi delete account
+    // Fungsi delete account
     const deleteAccount = (confirmationText = '') => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -198,13 +242,23 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    // PERBAIKAN: Favorites system yang benar
+    // ================================
+    // FAVORITES MANAGEMENT
+    // ================================
+    
+    // Mendapatkan daftar favorites user
     const getUserFavorites = () => {
         if (!user) return [];
         const key = getUserFavoritesKey(user.id);
-        return JSON.parse(localStorage.getItem(key) || '[]');
+        try {
+            return JSON.parse(localStorage.getItem(key) || '[]');
+        } catch (error) {
+            console.error('Error parsing favorites:', error);
+            return [];
+        }
     };
 
+    // Menambahkan movie ke favorites
     const addToFavorites = (movie) => {
         if (!user) return false;
         
@@ -235,6 +289,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Menghapus movie dari favorites
     const removeFromFavorites = (movieId) => {
         if (!user) return false;
         
@@ -251,22 +306,29 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Mengecek apakah movie ada di favorites
     const isMovieInFavorites = (movieId) => {
         if (!user) return false;
         const favorites = getUserFavorites();
         return favorites.some(movie => movie.id === movieId);
     };
 
-    // PERBAIKAN: Tambahkan fungsi untuk admin
+    // ================================
+    // ADMIN FUNCTIONS
+    // ================================
+    
+    // Mengecek apakah movie adalah user movie
     const isUserMovie = (movieId) => {
         const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
-        return userMovies.some(movie => movie.id == movieId);
+        // PERBAIKAN: Ganti == dengan ===
+        return userMovies.some(movie => movie.id === movieId);
     };
 
+    // Menghapus user movie
     const deleteUserMovie = (movieId) => {
         try {
             const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
-            const movieToDelete = userMovies.find(m => m.id == movieId);
+            const movieToDelete = userMovies.find(m => m.id === movieId); // PERBAIKAN: ===
             
             if (!movieToDelete) {
                 return { success: false, message: 'Movie not found' };
@@ -281,10 +343,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Update user movie
     const updateUserMovie = (movieId, updatedData) => {
         try {
             const userMovies = JSON.parse(localStorage.getItem('user_movies') || '[]');
-            const movieIndex = userMovies.findIndex(m => m.id == movieId);
+            const movieIndex = userMovies.findIndex(m => m.id === movieId); // PERBAIKAN: ===
             
             if (movieIndex === -1) {
                 return { success: false, message: 'Movie not found' };
@@ -299,7 +362,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // PERBAIKAN: Tambahkan changePassword function
+    // ================================
+    // PASSWORD MANAGEMENT
+    // ================================
+    
+    // Fungsi change password
     const changePassword = (currentPassword, newPassword) => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -315,7 +382,7 @@ export const AuthProvider = ({ children }) => {
                         return;
                     }
                     
-                    // Update admin password
+                    // Update admin password (in a real app, this would be hashed)
                     const updatedUser = { 
                         ...user, 
                         _passwordUpdated: new Date().toISOString()
@@ -351,6 +418,9 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    // ================================
+    // CONTEXT VALUE
+    // ================================
     const value = {
         user,
         login,

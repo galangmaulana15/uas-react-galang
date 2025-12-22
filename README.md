@@ -89,6 +89,7 @@ roncomovie/
 │   │
 │   ├── App.jsx                     # Router utama aplikasi
 │   ├── main.jsx                    # Entry point aplikasi React
+|   |-- vercel.json
 │   └── index.css                   # Style global aplikasi
 │
 ├── README.md                       # Dokumentasi project

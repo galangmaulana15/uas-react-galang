@@ -267,6 +267,11 @@
     }
 }
 
+/* ✅ PERUBAHAN: Tambah styling untuk auth pages */
+.auth-page-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 /* Class untuk animasi fade in */
 .animate-fadeIn { 
     animation: fadeIn 0.3s ease-out; /* Durasi 0.3 detik, easing out */

@@ -1,5 +1,7 @@
 // Mengimpor modul React dan hook yang diperlukan
 import React, { useState, useEffect } from 'react';
+// Mengimpor Link untuk navigasi internal React Router
+import { Link } from 'react-router-dom';
 // Mengimpor ikon-ikon dari library lucide-react
 import { X, Play, Star, Clock, Calendar, Heart, Share2, Globe, Users, Video, ExternalLink } from 'lucide-react';
 // Mengimpor fungsi API dari service
@@ -7,15 +9,18 @@ import { getMovieDetail, getImageUrl } from '../services/api';
 
 // Komponen Modal untuk menampilkan detail film
 const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) => {
-    // State untuk menyimpan data film
-    const [movie, setMovie] = useState(null);
-    // State untuk status loading
-    const [loading, setLoading] = useState(false);
-    // State untuk tab aktif (overview/details/cast)
-    const [activeTab, setActiveTab] = useState('overview');
-    // State untuk status trailer yang sedang diputar
-    const [trailerPlaying, setTrailerPlaying] = useState(false);
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
+    const [movie, setMovie] = useState(null);           // State untuk data film
+    const [loading, setLoading] = useState(false);      // State untuk status loading
+    const [activeTab, setActiveTab] = useState('overview'); // State untuk tab aktif
+    const [trailerPlaying, setTrailerPlaying] = useState(false); // State untuk trailer
 
+    // ================================
+    // EFFECT UNTUK FETCH DATA
+    // ================================
+    
     // Effect untuk mengambil detail film ketika modal dibuka
     useEffect(() => {
         if (isOpen && movieId) {
@@ -39,6 +44,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         
         // Menambahkan event listener
         window.addEventListener('keydown', handleEsc);
+        
         // Cleanup function untuk menghapus event listener
         return () => {
             window.removeEventListener('keydown', handleEsc);
@@ -46,6 +52,10 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         };
     }, [isOpen, onClose]);
 
+    // ================================
+    // FUNGSI UTILITAS
+    // ================================
+    
     // Fungsi untuk mengambil detail film dari API
     const fetchMovieDetails = async () => {
         if (!movieId) return;
@@ -127,6 +137,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
+                    aria-label="Close modal"
                 >
                     <X size={24} />
                 </button>
@@ -149,6 +160,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                         src={getImageUrl(movie.backdrop_path, 'w1280')}
                                         alt={movie.title}
                                         className="w-full h-full object-cover"
+                                        loading="lazy"
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-gradient-to-r from-blue-900/50 to-purple-900/50"></div>
@@ -166,6 +178,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             src={getImageUrl(movie.poster_path, 'w500')}
                                             alt={movie.title}
                                             className="w-full h-full object-cover"
+                                            loading="lazy"
                                         />
                                     </div>
                                     
@@ -200,7 +213,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                         {/* Tombol aksi */}
                                         <div className="flex flex-wrap gap-3">
                                             {/* Tombol trailer jika tersedia */}
-                                            {movie.trailer && (
+                                            {movie.trailer && movie.trailer.key && ( // PERBAIKAN: Cek keberadaan trailer
                                                 <button
                                                     onClick={() => setTrailerPlaying(true)}
                                                     className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -325,6 +338,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                                                 src={getImageUrl(company.logo_path, 'w92')}
                                                                 alt={company.name}
                                                                 className="h-8 object-contain"
+                                                                loading="lazy"
                                                             />
                                                         )}
                                                         <span className="text-gray-300">{company.name}</span>
@@ -369,6 +383,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                                             src={getImageUrl(person.profile_path, 'w185')}
                                                             alt={person.name}
                                                             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            loading="lazy"
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                                     </div>
@@ -394,15 +409,15 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                 )}
                             </div>
 
-                            {/* Tombol lihat detail lengkap */}
+                            {/* PERBAIKAN: Ganti <a> dengan <Link> untuk navigasi internal */}
                             <div className="mt-8 pt-6 border-t border-gray-700">
-                                <a
-                                    href={`/movie/${movie.id}`}
+                                <Link
+                                    to={`/movie/${movie.id}`}
                                     className="inline-flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
                                 >
                                     <ExternalLink size={20} />
                                     <span>View Full Movie Details</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -423,24 +438,27 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
             </div>
 
             {/* Modal untuk trailer YouTube */}
-            {trailerPlaying && movie?.trailer && (
+            {trailerPlaying && movie?.trailer?.key && ( // PERBAIKAN: Cek keberadaan trailer.key
                 <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/90 p-4 animate-fadeIn">
                     <div className="relative w-full max-w-4xl">
                         <button
                             onClick={() => setTrailerPlaying(false)}
                             className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+                            aria-label="Close trailer"
                         >
                             <X size={30} />
                         </button>
                         
                         {/* Container iframe dengan aspect ratio 16:9 */}
                         <div className="relative pt-[56.25%]">
+                            {/* PERBAIKAN: Hapus autoplay=1 untuk menghindari policy violations */}
                             <iframe
-                                src={`https://www.youtube.com/embed/${movie.trailer.key}?autoplay=1&rel=0`}
+                                src={`https://www.youtube.com/embed/${movie.trailer.key}?rel=0`}
                                 title={`${movie.title} Trailer`}
                                 className="absolute inset-0 w-full h-full rounded-lg"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
+                                sandbox="allow-same-origin allow-scripts allow-popups" // PERBAIKAN: Tambah sandbox untuk keamanan
                             />
                         </div>
                     </div>

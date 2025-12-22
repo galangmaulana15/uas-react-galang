@@ -13,19 +13,19 @@ import {
 // FOOTER COMPONENT
 // ================================
 const Footer = () => {
-  // ================================
-  // AMBIL TAHUN SAAT INI
-  // ================================
   const currentYear = new Date().getFullYear()
 
   // ================================
-  // RENDER
+  // HANDLER LINK EKSTERNAL
   // ================================
+  const openExternal = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <footer className="bg-gradient-to-r from-gray-900 to-slate-900 text-white mt-16">
       <div className="container mx-auto px-4 py-12">
 
-        {/* ================= BRAND ================= */}
         <div className="grid md:grid-cols-4 gap-8">
 
           {/* LOGO & DESKRIPSI */}
@@ -42,27 +42,41 @@ const Footer = () => {
               and enjoying movies from around the world.
             </p>
 
-            {/* SOCIAL MEDIA */}
+            {/* SOCIAL MEDIA (EKSTERNAL → BUTTON) */}
             <div className="flex gap-4">
-              <a href="https://github.com/galangmaulana15" className="text-gray-400 hover:text-white">
+              <button
+                onClick={() => openExternal('https://github.com/galangmaulana15')}
+                className="text-gray-400 hover:text-white"
+              >
                 <Github size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              </button>
+
+              <button
+                onClick={() => openExternal('https://twitter.com')}
+                className="text-gray-400 hover:text-white"
+              >
                 <Twitter size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              </button>
+
+              <button
+                onClick={() => openExternal('https://facebook.com')}
+                className="text-gray-400 hover:text-white"
+              >
                 <Facebook size={20} />
-              </a>
-              <a
-                href="https://www.instagram.com/gggllngg_?igsh=c3lla2I1aTNlc2Z4"
+              </button>
+
+              <button
+                onClick={() =>
+                  openExternal('https://www.instagram.com/gggllngg_?igsh=c3lla2I1aTNlc2Z4')
+                }
                 className="text-gray-400 hover:text-white"
               >
                 <Instagram size={20} />
-              </a>
+              </button>
             </div>
           </div>
 
-          {/* ================= QUICK LINKS ================= */}
+          {/* QUICK LINKS (INTERNAL) */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
@@ -73,18 +87,34 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* ================= CATEGORY LINKS ================= */}
+          {/* CATEGORIES (INTERNAL + QUERY PARAM) */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
             <ul className="space-y-2">
-              <li><a href="/movies?category=popular" className="text-gray-400 hover:text-white">Popular Movies</a></li>
-              <li><a href="/movies?category=top_rated" className="text-gray-400 hover:text-white">Top Rated</a></li>
-              <li><a href="/movies?category=upcoming" className="text-gray-400 hover:text-white">Upcoming</a></li>
-              <li><a href="/movies?category=now_playing" className="text-gray-400 hover:text-white">Now Playing</a></li>
+              <li>
+                <Link to="/movies?category=popular" className="text-gray-400 hover:text-white">
+                  Popular Movies
+                </Link>
+              </li>
+              <li>
+                <Link to="/movies?category=top_rated" className="text-gray-400 hover:text-white">
+                  Top Rated
+                </Link>
+              </li>
+              <li>
+                <Link to="/movies?category=upcoming" className="text-gray-400 hover:text-white">
+                  Upcoming
+                </Link>
+              </li>
+              <li>
+                <Link to="/movies?category=now_playing" className="text-gray-400 hover:text-white">
+                  Now Playing
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* ================= NEWSLETTER ================= */}
+          {/* NEWSLETTER */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Stay Updated</h3>
             <p className="text-gray-400 mb-4">
@@ -111,28 +141,28 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* ================= DIVIDER ================= */}
         <div className="border-t border-gray-800 my-8" />
 
-        {/* ================= BOTTOM BAR ================= */}
+        {/* BOTTOM BAR */}
         <div className="flex flex-col md:flex-row justify-between items-center text-sm">
           <p className="text-gray-400">
             © {currentYear} RoncoMovie. All rights reserved.
           </p>
 
+          {/* POLICY (BELUM ADA HALAMAN → BUTTON) */}
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-white">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-white">Cookie Policy</a>
-            <a href="#" className="text-gray-400 hover:text-white">Contact Us</a>
+            <button className="text-gray-400 hover:text-white">Privacy Policy</button>
+            <button className="text-gray-400 hover:text-white">Terms of Service</button>
+            <button className="text-gray-400 hover:text-white">Cookie Policy</button>
+            <button className="text-gray-400 hover:text-white">Contact Us</button>
           </div>
         </div>
 
-        {/* ================= ATTRIBUTION ================= */}
         <div className="mt-8 text-center text-gray-500 text-sm">
           <p>Ronco Movie</p>
           <p className="mt-2">Stream movies, explore stories, and enjoy the show.</p>
         </div>
+
       </div>
     </footer>
   )

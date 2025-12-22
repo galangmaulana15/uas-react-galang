@@ -19,15 +19,9 @@ const MovieCard = ({ movie, onFavoriteToggle, isFavorite, onQuickView }) => {
         }
     };
 
-    const handleFavorite = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (onFavoriteToggle) {
-            onFavoriteToggle(movie);
-        }
-    };
-
+const handleFavorite = () => {
+  onFavoriteToggle && onFavoriteToggle(movie)
+}
     return (
         <div 
             className="group relative bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gray-700/30"
