@@ -1,40 +1,52 @@
+// Mengimpor modul React dan hook yang diperlukan
 import React, { useState, useEffect } from 'react';
+// Mengimpor ikon-ikon dari library lucide-react
 import { X, Play, Star, Clock, Calendar, Heart, Share2, Globe, Users, Video, ExternalLink } from 'lucide-react';
+// Mengimpor fungsi API dari service
 import { getMovieDetail, getImageUrl } from '../services/api';
 
-
+// Komponen Modal untuk menampilkan detail film
 const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) => {
+    // State untuk menyimpan data film
     const [movie, setMovie] = useState(null);
+    // State untuk status loading
     const [loading, setLoading] = useState(false);
+    // State untuk tab aktif (overview/details/cast)
     const [activeTab, setActiveTab] = useState('overview');
+    // State untuk status trailer yang sedang diputar
     const [trailerPlaying, setTrailerPlaying] = useState(false);
 
+    // Effect untuk mengambil detail film ketika modal dibuka
     useEffect(() => {
         if (isOpen && movieId) {
             fetchMovieDetails();
         }
     }, [isOpen, movieId]);
 
+    // Effect untuk mengatur scroll body dan event listener ESC
     useEffect(() => {
-        // Prevent body scroll when modal is open
+        // Mencegah scroll pada body saat modal terbuka
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
         
-        // Close modal on ESC key
+        // Menutup modal saat tombol ESC ditekan
         const handleEsc = (e) => {
             if (e.key === 'Escape') onClose();
         };
         
+        // Menambahkan event listener
         window.addEventListener('keydown', handleEsc);
+        // Cleanup function untuk menghapus event listener
         return () => {
             window.removeEventListener('keydown', handleEsc);
             document.body.style.overflow = 'unset';
         };
     }, [isOpen, onClose]);
 
+    // Fungsi untuk mengambil detail film dari API
     const fetchMovieDetails = async () => {
         if (!movieId) return;
         
@@ -49,6 +61,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         }
     };
 
+    // Fungsi untuk menangani toggle favorit
     const handleFavoriteToggle = () => {
         if (!movie) return;
         
@@ -57,7 +70,9 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         }
     };
 
+    // Fungsi untuk berbagi film
     const handleShare = () => {
+        // Menggunakan Web Share API jika tersedia
         if (navigator.share && movie) {
             navigator.share({
                 title: movie.title,
@@ -65,12 +80,13 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                 url: window.location.href,
             });
         } else {
-            // Fallback: Copy to clipboard
+            // Fallback: copy ke clipboard
             navigator.clipboard.writeText(`${movie.title} - ${window.location.origin}/movie/${movie.id}`);
             alert('Link copied to clipboard!');
         }
     };
 
+    // Fungsi untuk memformat durasi film dari menit ke format jam:menit
     const formatRuntime = (minutes) => {
         if (!minutes) return 'N/A';
         const hours = Math.floor(minutes / 60);
@@ -78,6 +94,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         return `${hours}h ${mins}m`;
     };
 
+    // Fungsi untuk memformat mata uang (USD)
     const formatCurrency = (amount) => {
         if (!amount) return 'N/A';
         return new Intl.NumberFormat('en-US', {
@@ -88,21 +105,25 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
         }).format(amount);
     };
 
+    // Fungsi untuk menutup modal saat klik di luar konten modal
     const handleClose = (e) => {
         if (e.target === e.currentTarget) {
             onClose();
         }
     };
 
+    // Jika modal tidak terbuka, tidak merender apa-apa
     if (!isOpen) return null;
 
     return (
+        // Overlay modal
         <div 
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
             onClick={handleClose}
         >
+            {/* Kontainer utama modal */}
             <div className="relative w-full max-w-4xl max-h-[90vh] bg-gradient-to-br from-gray-900 to-slate-900 rounded-2xl overflow-hidden shadow-2xl animate-slideUp">
-                {/* Close Button */}
+                {/* Tombol tutup */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-50 w-10 h-10 bg-gray-800/80 hover:bg-gray-700 rounded-full flex items-center justify-center text-white transition-colors"
@@ -110,15 +131,19 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                     <X size={24} />
                 </button>
 
+                {/* Kondisional rendering: loading, data film, atau error */}
                 {loading ? (
+                    // Tampilan loading
                     <div className="flex items-center justify-center h-96">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                     </div>
                 ) : movie ? (
+                    // Konten ketika data film tersedia
                     <div className="overflow-y-auto max-h-[90vh]">
-                        {/* Hero Section with Backdrop */}
+                        {/* Section hero dengan backdrop */}
                         <div className="relative h-64 sm:h-80">
                             <div className="absolute inset-0">
+                                {/* Backdrop image atau fallback gradient */}
                                 {movie.backdrop_path ? (
                                     <img
                                         src={getImageUrl(movie.backdrop_path, 'w1280')}
@@ -128,13 +153,14 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                 ) : (
                                     <div className="w-full h-full bg-gradient-to-r from-blue-900/50 to-purple-900/50"></div>
                                 )}
+                                {/* Overlay gradient */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
                             </div>
                             
-                            {/* Movie Info Overlay */}
+                            {/* Info film di atas backdrop */}
                             <div className="absolute bottom-0 left-0 right-0 p-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
-                                    {/* Poster */}
+                                    {/* Poster film */}
                                     <div className="w-32 h-48 sm:w-40 sm:h-60 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
                                         <img
                                             src={getImageUrl(movie.poster_path, 'w500')}
@@ -143,11 +169,12 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                         />
                                     </div>
                                     
-                                    {/* Title and Basic Info */}
+                                    {/* Judul dan info dasar */}
                                     <div className="flex-1">
                                         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                                             {movie.title}
                                         </h2>
+                                        {/* Rating, durasi, tanggal rilis, bahasa */}
                                         <div className="flex flex-wrap items-center gap-4 text-gray-300 mb-4">
                                             <div className="flex items-center space-x-1">
                                                 <Star className="h-5 w-5 text-yellow-400 fill-current" />
@@ -170,8 +197,9 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             </div>
                                         </div>
                                         
-                                        {/* Action Buttons */}
+                                        {/* Tombol aksi */}
                                         <div className="flex flex-wrap gap-3">
+                                            {/* Tombol trailer jika tersedia */}
                                             {movie.trailer && (
                                                 <button
                                                     onClick={() => setTrailerPlaying(true)}
@@ -182,6 +210,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                                 </button>
                                             )}
                                             
+                                            {/* Tombol favorit */}
                                             <button
                                                 onClick={handleFavoriteToggle}
                                                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${isFavorite ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-800 hover:bg-gray-700'} text-white`}
@@ -190,6 +219,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                                 <span>{isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
                                             </button>
                                             
+                                            {/* Tombol share */}
                                             <button
                                                 onClick={handleShare}
                                                 className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -203,8 +233,9 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                             </div>
                         </div>
 
-                        {/* Content Tabs */}
+                        {/* Tab konten */}
                         <div className="p-6">
+                            {/* Navigasi tab */}
                             <div className="flex space-x-1 border-b border-gray-700 mb-6">
                                 <button
                                     onClick={() => setActiveTab('overview')}
@@ -226,8 +257,9 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                 </button>
                             </div>
 
-                            {/* Tab Content */}
+                            {/* Isi konten tab */}
                             <div className="min-h-[200px]">
+                                {/* Tab Overview */}
                                 {activeTab === 'overview' && (
                                     <div>
                                         <h3 className="text-xl font-bold mb-4 text-white">Overview</h3>
@@ -235,12 +267,14 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             {movie.overview || 'No description available.'}
                                         </p>
                                         
+                                        {/* Tagline film */}
                                         {movie.tagline && (
                                             <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border-l-4 border-blue-500">
                                                 <p className="italic text-gray-300">"{movie.tagline}"</p>
                                             </div>
                                         )}
                                         
+                                        {/* Grid info statistik */}
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
                                             <div className="bg-gray-800/50 p-4 rounded-lg">
                                                 <div className="text-sm text-gray-400">Status</div>
@@ -262,8 +296,10 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                     </div>
                                 )}
 
+                                {/* Tab Details */}
                                 {activeTab === 'details' && (
                                     <div className="space-y-6">
+                                        {/* Genre */}
                                         <div>
                                             <h3 className="text-xl font-bold mb-3 text-white">Genres</h3>
                                             <div className="flex flex-wrap gap-2">
@@ -278,6 +314,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             </div>
                                         </div>
 
+                                        {/* Perusahaan produksi */}
                                         <div>
                                             <h3 className="text-xl font-bold mb-3 text-white">Production Companies</h3>
                                             <div className="flex flex-wrap gap-4">
@@ -296,6 +333,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             </div>
                                         </div>
 
+                                        {/* Bahasa */}
                                         <div>
                                             <h3 className="text-xl font-bold mb-3 text-white">Spoken Languages</h3>
                                             <div className="flex flex-wrap gap-2">
@@ -312,6 +350,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                     </div>
                                 )}
 
+                                {/* Tab Cast */}
                                 {activeTab === 'cast' && (
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
@@ -321,6 +360,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             </span>
                                         </div>
                                         
+                                        {/* Grid untuk anggota cast */}
                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                             {movie.cast?.slice(0, 10).map(person => (
                                                 <div key={person.id} className="text-center group">
@@ -342,6 +382,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                             ))}
                                         </div>
                                         
+                                        {/* Tombol lihat semua cast jika lebih dari 10 */}
                                         {movie.cast?.length > 10 && (
                                             <div className="text-center mt-6">
                                                 <button className="text-blue-400 hover:text-blue-300 text-sm">
@@ -353,7 +394,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                                 )}
                             </div>
 
-                            {/* View Full Details Button */}
+                            {/* Tombol lihat detail lengkap */}
                             <div className="mt-8 pt-6 border-t border-gray-700">
                                 <a
                                     href={`/movie/${movie.id}`}
@@ -366,6 +407,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                         </div>
                     </div>
                 ) : (
+                    // Tampilan ketika data film tidak ditemukan
                     <div className="flex flex-col items-center justify-center h-96 p-6 text-center">
                         <Video className="h-16 w-16 text-gray-400 mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Movie Not Found</h3>
@@ -380,7 +422,7 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                 )}
             </div>
 
-            {/* YouTube Trailer Modal */}
+            {/* Modal untuk trailer YouTube */}
             {trailerPlaying && movie?.trailer && (
                 <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/90 p-4 animate-fadeIn">
                     <div className="relative w-full max-w-4xl">
@@ -391,7 +433,8 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
                             <X size={30} />
                         </button>
                         
-                        <div className="relative pt-[56.25%]"> {/* 16:9 Aspect Ratio */}
+                        {/* Container iframe dengan aspect ratio 16:9 */}
+                        <div className="relative pt-[56.25%]">
                             <iframe
                                 src={`https://www.youtube.com/embed/${movie.trailer.key}?autoplay=1&rel=0`}
                                 title={`${movie.title} Trailer`}
@@ -407,4 +450,5 @@ const MovieModal = ({ movieId, isOpen, onClose, onFavoriteToggle, isFavorite }) 
     );
 };
 
+// Export komponen
 export default MovieModal;

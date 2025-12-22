@@ -57,36 +57,41 @@ RoncoMovie is a modern movie discovery platform built with React, Tailwind CSS v
   - Admin controls (for admin users)
 
 
-## 📁 Project Structure
 roncomovie/
-├── public/
+├── public/                         # Folder untuk file statis (gambar, icon, dll)
 ├── src/
-│ ├── components/
-│ │ ├── Header.jsx # Navigation header
-│ │ ├── Footer.jsx # Site footer
-│ │ ├── MovieCard.jsx # Movie display card
-│ │ ├── MovieModal.jsx # Movie modal(ifneeded)
-│ │ └── ProtectedRoute.jsx # Auth protection
-│ ├── pages/
-│ │ ├── Home.jsx # Landing page
-│ │ ├── Login.jsx # Login page
-│ │ ├── Register.jsx # Registration page
-│ │ ├── Movies.jsx # Movie listing
-│ │ ├── MovieDetail.jsx # Single movie view
-│ │ ├── Favorites.jsx # User favorites
-│ │ ├── Dashboard.jsx # User dashboard
-│ │ └── AddMovie.jsx # Add movie (admin)
-| | |-- Profile.jsx # Profile user /admin
-│ ├── context/
-│ │ └── AuthContext.jsx # Authentication context
-│ ├── services/
-│ │ └── api.js # TMDB API integration
-│ ├── utils/
-│ │ └── validation.js # Form validation utilities
-│ ├── App.jsx # Main router
-│ ├── main.jsx # App entry point
-│ └── index.css # Global styles
-└── README.md
-|-- .gitignore
-|-- package.json
-|-- vite.config.js
+│   ├── components/
+│   │   ├── Header.jsx              # Komponen header / navigasi utama
+│   │   ├── Footer.jsx              # Komponen footer website
+│   │   ├── MovieCard.jsx           # Komponen card untuk menampilkan data film
+│   │   ├── MovieModal.jsx          # Modal / popup detail film (jika diperlukan)
+│   │   └── ProtectedRoute.jsx      # Proteksi halaman (hanya bisa diakses jika login)
+│   │
+│   ├── pages/
+│   │   ├── Home.jsx                # Halaman utama (landing page)
+│   │   ├── Login.jsx               # Halaman login user
+│   │   ├── Register.jsx            # Halaman registrasi user
+│   │   ├── Movies.jsx              # Halaman daftar semua film
+│   │   ├── MovieDetail.jsx         # Halaman detail satu film
+│   │   ├── Favorites.jsx           # Halaman film favorit user
+│   │   ├── Dashboard.jsx           # Halaman dashboard user / admin
+│   │   ├── AddMovie.jsx            # Halaman tambah film (khusus admin)
+│   │   └── Profile.jsx             # Halaman profil user / admin
+│   │
+│   ├── context/
+│   │   └── AuthContext.jsx         # Context untuk autentikasi (login, logout, data user)
+│   │
+│   ├── services/
+│   │   └── api.js                  # File integrasi API film (TMDB)
+│   │
+│   ├── utils/
+│   │   └── validation.js           # Fungsi validasi form (email, password, dll)
+│   │
+│   ├── App.jsx                     # Router utama aplikasi
+│   ├── main.jsx                    # Entry point aplikasi React
+│   └── index.css                   # Style global aplikasi
+│
+├── README.md                       # Dokumentasi project
+├── .gitignore                     
+├── package.json                    # Dependency & konfigurasi project
+└── vite.config.js                 

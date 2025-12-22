@@ -165,34 +165,5 @@ const MovieCard = ({ movie, onFavoriteToggle, isFavorite, onQuickView }) => {
     );
 };
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-    @keyframes float-delay {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-15px); }
-    }
-    @keyframes float-delay-2 {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-    }
-    @keyframes ping-slow {
-        75%, 100% { transform: scale(2); opacity: 0; }
-    }
-    @keyframes pulse-slow {
-        0%, 100% { opacity: 0.1; }
-        50% { opacity: 0.2; }
-    }
-    .animate-float { animation: float 3s ease-in-out infinite; }
-    .animate-float-delay { animation: float-delay 4s ease-in-out infinite; }
-    .animate-float-delay-2 { animation: float-delay-2 5s ease-in-out infinite; }
-    .animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
-    .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
-`;
-document.head.appendChild(style);
 
 export default MovieCard;

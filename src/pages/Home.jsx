@@ -1,38 +1,55 @@
+// Import modul React dan hooks yang diperlukan
 import React, { useState, useEffect, useRef } from 'react';
+// Import komponen Link untuk navigasi dari react-router-dom
 import { Link } from 'react-router-dom';
+// Import ikon-ikon dari lucide-react
 import { Play, TrendingUp, Star, Calendar, Heart, ChevronLeft, ChevronRight, Film, Clock, Zap } from 'lucide-react';
+// Import komponen MovieCard
 import MovieCard from '../components/MovieCard';
+// Import komponen MovieModal
 import MovieModal from '../components/MovieModal';
+// Import fungsi API untuk mendapatkan film berdasarkan kategori
 import { getMoviesByCategory } from '../services/api';
 
-
+// Komponen Home untuk halaman utama
 const Home = () => {
+    // State untuk menyimpan film populer
     const [popularMovies, setPopularMovies] = useState([]);
+    // State untuk menyimpan film dengan rating tertinggi
     const [topRatedMovies, setTopRatedMovies] = useState([]);
+    // State untuk menyimpan film yang akan datang
     const [upcomingMovies, setUpcomingMovies] = useState([]);
+    // State untuk menyimpan film yang sedang tayang
     const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
+    // State untuk status loading
     const [loading, setLoading] = useState(true);
+    // State untuk slide carousel saat ini
     const [currentSlide, setCurrentSlide] = useState(0);
     
     // State untuk MovieModal
     const [selectedMovieId, setSelectedMovieId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     
+    // State untuk daftar favorit
     const [favorites, setFavorites] = useState([]);
 
+    // Ref untuk carousel
     const carouselRef = useRef(null);
+    // Total slide carousel
     const totalSlides = 4;
 
-    // Load favorites saat component mount
+    // Effect untuk memuat favorit dari localStorage saat komponen mount
     useEffect(() => {
         const savedFavorites = JSON.parse(localStorage.getItem('roncomovie_favorites') || '[]');
         setFavorites(savedFavorites);
     }, []);
 
+    // Effect untuk mengambil data film dari API
     useEffect(() => {
         const fetchMovies = async () => {
             try {
                 setLoading(true);
+                // Mengambil data dari 4 kategori sekaligus menggunakan Promise.all
                 const [popularData, topRatedData, upcomingData, nowPlayingData] = await Promise.all([
                     getMoviesByCategory('popular'),
                     getMoviesByCategory('top_rated'),
@@ -40,6 +57,7 @@ const Home = () => {
                     getMoviesByCategory('now_playing')
                 ]);
 
+                // Set data ke state dengan jumlah yang dibatasi
                 setPopularMovies(popularData.movies.slice(0, 16));
                 setTopRatedMovies(topRatedData.movies.slice(0, 8));
                 setUpcomingMovies(upcomingData.movies.slice(1,5));
@@ -53,21 +71,23 @@ const Home = () => {
 
         fetchMovies();
 
-        // Auto slide carousel
+        // Interval untuk auto slide carousel setiap 4 detik
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % totalSlides);
         }, 4000);
 
+        // Cleanup interval saat komponen unmount
         return () => clearInterval(interval);
     }, []);
 
+    // Effect untuk mengubah posisi carousel saat currentSlide berubah
     useEffect(() => {
         if (carouselRef.current) {
             carouselRef.current.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
     }, [currentSlide]);
 
-    // FIXED: toggleFavorite function
+    // Fungsi untuk toggle favorite (menambah/menghapus dari favorit)
     const toggleFavorite = (movie) => {
         // 1. Baca dari localStorage
         const savedFavorites = JSON.parse(localStorage.getItem('roncomovie_favorites') || '[]');
@@ -108,6 +128,7 @@ const Home = () => {
         return !isCurrentlyFavorite;
     };
 
+    // Fungsi untuk mengecek apakah film sudah difavoritkan
     const isFavorite = (movieId) => {
         return favorites.some(fav => fav.id === movieId);
     };
@@ -124,14 +145,17 @@ const Home = () => {
         setSelectedMovieId(null);
     };
 
+    // Fungsi untuk slide berikutnya
     const nextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % totalSlides);
     };
 
+    // Fungsi untuk slide sebelumnya
     const prevSlide = () => {
         setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
     };
 
+    // Tampilan loading
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
@@ -550,94 +574,6 @@ const Home = () => {
                 onFavoriteToggle={toggleFavorite}
                 isFavorite={selectedMovieId ? isFavorite(selectedMovieId) : false}
             />
-
-            {/* Global CSS untuk animasi */}
-            <style jsx>{`
-                @keyframes float {
-                    0%, 100% {
-                        transform: translateY(0) rotate(0deg);
-                    }
-                    33% {
-                        transform: translateY(-20px) rotate(5deg);
-                    }
-                    66% {
-                        transform: translateY(20px) rotate(-5deg);
-                    }
-                }
-                
-                @keyframes gradient {
-                    0%, 100% {
-                        background-position: 0% 50%;
-                    }
-                    50% {
-                        background-position: 100% 50%;
-                    }
-                }
-                
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-                
-                .animate-float {
-                    animation: float infinite ease-in-out;
-                }
-                
-                .animate-gradient {
-                    animation: gradient 3s ease infinite;
-                }
-                
-                .animate-fade-in-up {
-                    animation: fadeInUp 0.8s ease-out forwards;
-                }
-                
-                .animate-fade-in {
-                    animation: fadeIn 0.5s ease-out forwards;
-                }
-                
-                .animation-delay-300 {
-                    animation-delay: 300ms;
-                }
-                
-                .animation-delay-500 {
-                    animation-delay: 500ms;
-                }
-                
-                .line-clamp-1 {
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-box-orient: vertical;
-                    -webkit-line-clamp: 1;
-                }
-                
-                .line-clamp-2 {
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-box-orient: vertical;
-                    -webkit-line-clamp: 2;
-                }
-                
-                .truncate {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-            `}</style>
         </div>
     );
 };

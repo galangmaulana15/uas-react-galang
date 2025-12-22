@@ -1,35 +1,58 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Film, User, LogOut, Menu, X, Home, Star, Heart, Plus, Settings } from 'lucide-react';
+import { 
+  Search, Film, User, LogOut, Menu, X, Home, Star, Heart, Plus, Settings, 
+  ChevronDown // <-- Ikon tambahan untuk dropdown arrow
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Header = ({ onSearch }) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    // ================================
+    // STATE MANAGEMENT
+    // ================================
+    const [searchQuery, setSearchQuery] = useState(''); // State untuk query pencarian
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // State untuk menu mobile
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false); // State untuk dropdown user
+    
+    // ================================
+    // AUTH CONTEXT & NAVIGATION
+    // ================================
+    const { user, logout } = useAuth(); // Ambil user dan fungsi logout dari context
+    const navigate = useNavigate(); // Hook untuk navigasi programatik
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-        navigate(`/movies?search=${encodeURIComponent(searchQuery.trim())}`);
-        setSearchQuery(''); // Clear input after search
-    }
-};
-
-    const handleLogout = () => {
-        logout();
-        navigate('/');
-        setUserDropdownOpen(false);
+    // ================================
+    // HANDLE SEARCH FUNCTION
+    // ================================
+    const handleSearch = (e) => {
+        e.preventDefault(); // Mencegah reload halaman
+        if (searchQuery.trim()) {
+            // Navigasi ke halaman movies dengan query search
+            navigate(`/movies?search=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery(''); // Reset input setelah search
+        }
     };
 
+    // ================================
+    // HANDLE LOGOUT FUNCTION
+    // ================================
+    const handleLogout = () => {
+        logout(); // Panggil fungsi logout dari context
+        navigate('/'); // Redirect ke home
+        setUserDropdownOpen(false); // Tutup dropdown
+    };
+
+    // ================================
+    // NAVIGATION ITEMS CONFIGURATION
+    // ================================
     const navItems = [
         { path: '/', label: 'Home', icon: <Home className="h-5 w-5" /> },
         { path: '/movies', label: 'Movies', icon: <Film className="h-5 w-5" /> },
         { path: '/favorites', label: 'Favorites', icon: <Heart className="h-5 w-5" /> },
     ];
 
+    // ================================
+    // ADD ADMIN NAVIGATION ITEMS
+    // ================================
     if (user?.role === 'admin') {
         navItems.push(
             { path: '/add-movie', label: 'Add Movie', icon: <Plus className="h-5 w-5" /> },
@@ -37,11 +60,15 @@ const Header = ({ onSearch }) => {
         );
     }
 
+    // ================================
+    // RENDER COMPONENT
+    // ================================
     return (
         <header className="sticky top-0 z-50 bg-gradient-to-r from-gray-900/95 to-slate-900/95 backdrop-blur-lg border-b border-gray-800/50 shadow-2xl">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
-                    {/* Logo */}
+                    
+                    {/* ================= LOGO SECTION ================= */}
                     <Link to="/" className="flex items-center space-x-3 group">
                         <div className="relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -55,7 +82,7 @@ const Header = ({ onSearch }) => {
                         </div>
                     </Link>
 
-                    {/* Desktop Navigation */}
+                    {/* ================= DESKTOP NAVIGATION ================= */}
                     <nav className="hidden md:flex items-center space-x-1">
                         {navItems.map((item) => (
                             <Link
@@ -71,9 +98,10 @@ const Header = ({ onSearch }) => {
                         ))}
                     </nav>
 
-                    {/* Search and User Section */}
+                    {/* ================= SEARCH & USER SECTION ================= */}
                     <div className="flex items-center space-x-4">
-                        {/* Search Form */}
+                        
+                        {/* ========== SEARCH FORM (DESKTOP) ========== */}
                         <form onSubmit={handleSearch} className="relative hidden md:block">
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -94,7 +122,7 @@ const Header = ({ onSearch }) => {
                             </div>
                         </form>
 
-                        {/* User Menu */}
+                        {/* ========== USER MENU ========== */}
                         {user ? (
                             <div className="relative">
                                 <button
@@ -111,12 +139,13 @@ const Header = ({ onSearch }) => {
                                         <div className="font-semibold text-white">{user.name}</div>
                                         <div className="text-xs text-gray-400 capitalize">{user.role}</div>
                                     </div>
-                                    <svg className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${userDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    {/* PERBAIKAN: Ganti inline SVG dengan icon dari lucide-react */}
+                                    <ChevronDown 
+                                        className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${userDropdownOpen ? 'rotate-180' : ''}`} 
+                                    />
                                 </button>
 
-                                {/* Dropdown Menu */}
+                                {/* ========== DROPDOWN MENU ========== */}
                                 {userDropdownOpen && (
                                     <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-700/50 py-2 animate-slideDown z-50">
                                         <div className="px-4 py-3 border-b border-gray-700/50">
@@ -124,6 +153,7 @@ const Header = ({ onSearch }) => {
                                             <div className="text-sm text-gray-400">{user.email}</div>
                                         </div>
                                         
+                                        {/* Profile Link */}
                                         <Link
                                             to="/profile"
                                             onClick={() => setUserDropdownOpen(false)}
@@ -133,6 +163,7 @@ const Header = ({ onSearch }) => {
                                             <span>Profile Settings</span>
                                         </Link>
                                         
+                                        {/* Dashboard Link */}
                                         <Link
                                             to="/dashboard"
                                             onClick={() => setUserDropdownOpen(false)}
@@ -142,6 +173,7 @@ const Header = ({ onSearch }) => {
                                             <span>My Dashboard</span>
                                         </Link>
                                         
+                                        {/* Admin Links (hanya untuk role admin) */}
                                         {user.role === 'admin' && (
                                             <>
                                                 <Link
@@ -163,6 +195,7 @@ const Header = ({ onSearch }) => {
                                             </>
                                         )}
                                         
+                                        {/* Logout Button */}
                                         <div className="border-t border-gray-700/50 mt-2 pt-2">
                                             <button
                                                 onClick={handleLogout}
@@ -176,6 +209,7 @@ const Header = ({ onSearch }) => {
                                 )}
                             </div>
                         ) : (
+                            /* ========== LOGIN/REGISTER BUTTONS (DESKTOP) ========== */
                             <div className="flex items-center space-x-3">
                                 <Link
                                     to="/login"
@@ -192,7 +226,7 @@ const Header = ({ onSearch }) => {
                             </div>
                         )}
 
-                        {/* Mobile Menu Button */}
+                        {/* ========== MOBILE MENU BUTTON ========== */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="md:hidden p-2 text-gray-400 hover:text-white rounded-lg"
@@ -202,10 +236,10 @@ const Header = ({ onSearch }) => {
                     </div>
                 </div>
 
-                {/* Mobile Menu */}
+                {/* ================= MOBILE MENU ================= */}
                 {mobileMenuOpen && (
                     <div className="md:hidden mt-4 pb-4 animate-fadeIn">
-                        {/* Mobile Search */}
+                        {/* ========== MOBILE SEARCH FORM ========== */}
                         <form onSubmit={handleSearch} className="mb-4">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -219,8 +253,9 @@ const Header = ({ onSearch }) => {
                             </div>
                         </form>
                         
-                        {/* Mobile Navigation */}
+                        {/* ========== MOBILE NAVIGATION ========== */}
                         <nav className="flex flex-col space-y-2">
+                            {/* Navigation Items */}
                             {navItems.map((item) => (
                                 <Link
                                     key={item.path}
@@ -233,6 +268,7 @@ const Header = ({ onSearch }) => {
                                 </Link>
                             ))}
                             
+                            {/* Auth Links for Mobile */}
                             {!user ? (
                                 <>
                                     <Link
@@ -274,32 +310,6 @@ const Header = ({ onSearch }) => {
                     </div>
                 )}
             </div>
-            
-            {/* Add CSS for animations */}
-            <style jsx>{`
-                @keyframes gradient-x {
-                    0%, 100% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                }
-                .animate-gradient-x {
-                    background-size: 200% auto;
-                    animation: gradient-x 3s ease infinite;
-                }
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-slideDown {
-                    animation: slideDown 0.3s ease-out;
-                }
-                @keyframes heartbeat {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
-                }
-                .animate-heartbeat {
-                    animation: heartbeat 0.5s ease-in-out;
-                }
-            `}</style>
         </header>
     );
 };

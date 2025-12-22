@@ -1,116 +1,348 @@
-/* Tambahkan semua animasi dari komponen ke sini */
+@import "tailwindcss";
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Keyframe untuk animasi gradient horizontal */
+@keyframes gradient-x {
+    0%, 100% { 
+        background-position: 0% 50%; /* Posisi awal dan akhir gradient */
+    }
+    50% { 
+        background-position: 100% 50%; /* Posisi tengah gradient */
+    }
+}
+/* Class untuk animasi gradient horizontal dengan durasi 3 detik */
+.animate-gradient-x {
+    background-size: 200% auto; /* Membuat gradient lebih lebar dari container */
+    animation: gradient-x 3s ease infinite; /* Animasi berulang selamanya */
 }
 
+/* Keyframe untuk animasi slide down dari atas */
+@keyframes slideDown {
+    from { 
+        opacity: 0; /* Tidak terlihat di awal */
+        transform: translateY(-10px); /* Posisi mulai 10px di atas */
+    }
+    to { 
+        opacity: 1; /* Tampil penuh di akhir */
+        transform: translateY(0); /* Posisi akhir di tempat normal */
+    }
+}
+/* Class untuk animasi slide down */
+.animate-slideDown {
+    animation: slideDown 0.3s ease-out; /* Durasi 0.3 detik, easing ease-out */
+}
+
+/* Keyframe untuk animasi detak jantung (heartbeat) */
+@keyframes heartbeat {
+    0%, 100% { 
+        transform: scale(1); /* Ukuran normal di awal dan akhir */
+    }
+    50% { 
+        transform: scale(1.1); /* Membesar 10% di tengah animasi */
+    }
+}
+/* Class untuk animasi heartbeat */
+.animate-heartbeat {
+    animation: heartbeat 0.5s ease-in-out; /* Durasi 0.5 detik dengan easing in-out */
+}
+
+/* Keyframe untuk animasi melayang (float) */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg); /* Posisi normal di awal dan akhir */
+    }
+    33% {
+        transform: translateY(-20px) rotate(5deg); /* Naik 20px dan miring 5deg */
+    }
+    66% {
+        transform: translateY(20px) rotate(-5deg); /* Turun 20px dan miring -5deg */
+    }
+}
+
+/* Keyframe untuk animasi gradient */
+@keyframes gradient {
+    0%, 100% {
+        background-position: 0% 50%; /* Posisi awal dan akhir gradient */
+    }
+    50% {
+        background-position: 100% 50%; /* Posisi tengah gradient */
+    }
+}
+
+/* Keyframe untuk animasi fade in dari bawah */
+@keyframes fadeInUp {
+    from {
+        opacity: 0; /* Tidak terlihat di awal */
+        transform: translateY(30px); /* Mulai 30px di bawah */
+    }
+    to {
+        opacity: 1; /* Tampil penuh di akhir */
+        transform: translateY(0); /* Posisi normal di akhir */
+    }
+}
+
+/* Keyframe untuk animasi fade in sederhana */
+@keyframes fadeIn {
+    from {
+        opacity: 0; /* Tidak terlihat di awal */
+    }
+    to {
+        opacity: 1; /* Tampil penuh di akhir */
+    }
+}
+
+/* Class untuk animasi float */
+.animate-float {
+    animation: float infinite ease-in-out; /* Berulang selamanya dengan easing in-out */
+}
+
+/* Class untuk animasi gradient */
+.animate-gradient {
+    animation: gradient 3s ease infinite; /* Durasi 3 detik, berulang selamanya */
+}
+
+/* Class untuk animasi fade in dari bawah */
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards; /* Durasi 0.8s, easing out, tetap di akhir */
+}
+
+/* Class untuk animasi fade in sederhana */
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards; /* Durasi 0.5s, easing out, tetap di akhir */
+}
+
+/* Class untuk delay animasi 300ms */
+.animation-delay-300 {
+    animation-delay: 300ms;
+}
+
+/* Class untuk delay animasi 500ms */
+.animation-delay-500 {
+    animation-delay: 500ms;
+}
+
+/* Utility class untuk membatasi teks menjadi 1 baris dengan ellipsis */
+.line-clamp-1 {
+    overflow: hidden; /* Sembunyikan overflow */
+    display: -webkit-box; /* Gunakan model box fleksibel */
+    -webkit-box-orient: vertical; /* Orientasi vertikal */
+    -webkit-line-clamp: 1; /* Batasi menjadi 1 baris */
+}
+
+/* Utility class untuk membatasi teks menjadi 2 baris dengan ellipsis */
+.line-clamp-2 {
+    overflow: hidden; /* Sembunyikan overflow */
+    display: -webkit-box; /* Gunakan model box fleksibel */
+    -webkit-box-orient: vertical; /* Orientasi vertikal */
+    -webkit-line-clamp: 2; /* Batasi menjadi 2 baris */
+}
+
+/* Utility class untuk memotong teks dengan ellipsis (1 baris) */
+.truncate {
+    overflow: hidden; /* Sembunyikan overflow */
+    text-overflow: ellipsis; /* Tampilkan ellipsis (...) jika teks terpotong */
+    white-space: nowrap; /* Jangan bungkus teks ke baris baru */
+}
+
+/* Keyframe untuk animasi fade in sederhana (definisi ulang dengan properti berbeda) */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; /* Tidak terlihat di awal */
+    }
+    to { 
+        opacity: 1; /* Tampil penuh di akhir */
+    }
+}
+
+/* Keyframe untuk animasi slide up dari bawah */
 @keyframes slideUp {
     from {
-        opacity: 0;
-        transform: translateY(50px) scale(0.95); 
+        opacity: 0; /* Tidak terlihat di awal */
+        transform: translateY(50px) scale(0.95); /* Mulai 50px di bawah dan sedikit lebih kecil */
     }
     to {
-        opacity: 1;
-        transform: translateY(0) scale(1); 
+        opacity: 1; /* Tampil penuh di akhir */
+        transform: translateY(0) scale(1); /* Posisi normal dan ukuran normal */
     }
 }
 
+/* Keyframe untuk animasi slide down dari atas (definisi ulang) */
 @keyframes slideDown {
     from {
-        opacity: 0;
-        transform: translateY(-50px) scale(0.95); 
+        opacity: 0; /* Tidak terlihat di awal */
+        transform: translateY(-50px) scale(0.95); /* Mulai 50px di atas dan sedikit lebih kecil */
     }
     to {
-        opacity: 1;
-        transform: translateY(0) scale(1); 
+        opacity: 1; /* Tampil penuh di akhir */
+        transform: translateY(0) scale(1); /* Posisi normal dan ukuran normal */
     }
 }
 
+/* Keyframe untuk animasi slide in dari kanan */
 @keyframes slideInRight {
     from {
-        opacity: 0;
-        transform: translateX(100px); 
+        opacity: 0; /* Tidak terlihat di awal */
+        transform: translateX(100px); /* Mulai 100px dari kanan */
     }
     to {
-        opacity: 1;
-        transform: translateX(0); 
+        opacity: 1; /* Tampil penuh di akhir */
+        transform: translateX(0); /* Posisi normal */
     }
 }
 
+/* Keyframe untuk animasi melayang (float) dengan variasi */
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    0%, 100% { 
+        transform: translateY(0px); /* Posisi normal di awal dan akhir */
+    }
+    50% { 
+        transform: translateY(-10px); /* Naik 10px di tengah animasi */
+    }
 }
 
+/* Keyframe untuk animasi float dengan delay dan jarak berbeda */
 @keyframes float-delay {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
+    0%, 100% { 
+        transform: translateY(0px); /* Posisi normal di awal dan akhir */
+    }
+    50% { 
+        transform: translateY(-15px); /* Naik 15px di tengah animasi */
+    }
 }
 
+/* Keyframe untuk animasi float dengan delay dan jarak berbeda lagi */
 @keyframes float-delay-2 {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
+    0%, 100% { 
+        transform: translateY(0px); /* Posisi normal di awal dan akhir */
+    }
+    50% { 
+        transform: translateY(-8px); /* Naik 8px di tengah animasi */
+    }
 }
 
+/* Keyframe untuk animasi ping yang lambat */
 @keyframes ping-slow {
-    75%, 100% { transform: scale(2); opacity: 0; }
+    75%, 100% { 
+        transform: scale(2); /* Membesar 2x lipat */
+        opacity: 0; /* Menghilang di akhir */
+    }
 }
 
+/* Keyframe untuk animasi pulse yang lambat */
 @keyframes pulse-slow {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 0.2; }
+    0%, 100% { 
+        opacity: 0.1; /* Opacity rendah di awal dan akhir */
+    }
+    50% { 
+        opacity: 0.2; /* Opacity sedikit lebih tinggi di tengah */
+    }
 }
 
+/* Keyframe untuk animasi gradient horizontal (definisi ulang) */
 @keyframes gradient-x {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    0%, 100% { 
+        background-position: 0% 50%; /* Posisi awal dan akhir gradient */
+    }
+    50% { 
+        background-position: 100% 50%; /* Posisi tengah gradient */
+    }
 }
 
+/* Keyframe untuk animasi heartbeat (definisi ulang) */
 @keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%, 100% { 
+        transform: scale(1); /* Ukuran normal di awal dan akhir */
+    }
+    50% { 
+        transform: scale(1.1); /* Membesar 10% di tengah animasi */
+    }
 }
 
+/* Keyframe untuk animasi menyusut lebar (shrink width) */
 @keyframes shrinkWidth {
-    from { width: 100%; }
-    to { width: 0%; }
+    from { 
+        width: 100%; /* Mulai dengan lebar 100% */
+    }
+    to { 
+        width: 0%; /* Berakhir dengan lebar 0% */
+    }
 }
 
-/* Utility Classes */
-.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-.animate-slideUp { animation: slideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-.animate-slideDown { animation: slideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-.animate-slideInRight { animation: slideInRight 0.3s ease-out; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-float-delay { animation: float-delay 4s ease-in-out infinite; }
-.animate-float-delay-2 { animation: float-delay-2 5s ease-in-out infinite; }
-.animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
-.animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+/* Class untuk animasi fade in */
+.animate-fadeIn { 
+    animation: fadeIn 0.3s ease-out; /* Durasi 0.3 detik, easing out */
+}
+
+/* Class untuk animasi slide up dengan easing khusus */
+.animate-slideUp { 
+    animation: slideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* Durasi 0.4s dengan custom easing */
+}
+
+/* Class untuk animasi slide down dengan easing khusus */
+.animate-slideDown { 
+    animation: slideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* Durasi 0.4s dengan custom easing */
+}
+
+/* Class untuk animasi slide in dari kanan */
+.animate-slideInRight { 
+    animation: slideInRight 0.3s ease-out; /* Durasi 0.3 detik, easing out */
+}
+
+/* Class untuk animasi float standar */
+.animate-float { 
+    animation: float 3s ease-in-out infinite; /* Durasi 3 detik, berulang selamanya */
+}
+
+/* Class untuk animasi float dengan variasi pertama */
+.animate-float-delay { 
+    animation: float-delay 4s ease-in-out infinite; /* Durasi 4 detik, berulang selamanya */
+}
+
+/* Class untuk animasi float dengan variasi kedua */
+.animate-float-delay-2 { 
+    animation: float-delay-2 5s ease-in-out infinite; /* Durasi 5 detik, berulang selamanya */
+}
+
+/* Class untuk animasi ping yang lambat */
+.animate-ping-slow { 
+    animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; /* Durasi 2 detik, berulang selamanya */
+}
+
+/* Class untuk animasi pulse yang lambat */
+.animate-pulse-slow { 
+    animation: pulse-slow 3s ease-in-out infinite; /* Durasi 3 detik, berulang selamanya */
+}
+
+/* Class untuk animasi gradient horizontal */
 .animate-gradient-x { 
-    background-size: 200% auto;
-    animation: gradient-x 3s ease infinite;
+    background-size: 200% auto; /* Membuat gradient lebih lebar dari container */
+    animation: gradient-x 3s ease infinite; /* Durasi 3 detik, berulang selamanya */
 }
-.animate-heartbeat { animation: heartbeat 0.5s ease-in-out; }
 
-/* Line clamp utilities */
+/* Class untuk animasi heartbeat */
+.animate-heartbeat { 
+    animation: heartbeat 0.5s ease-in-out; /* Durasi 0.5 detik dengan easing in-out */
+}
+
+/* Utility class untuk membatasi teks menjadi 1 baris dengan ellipsis (definisi ulang) */
 .line-clamp-1 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
+    overflow: hidden; /* Sembunyikan overflow */
+    display: -webkit-box; /* Gunakan model box fleksibel */
+    -webkit-box-orient: vertical; /* Orientasi vertikal */
+    -webkit-line-clamp: 1; /* Batasi menjadi 1 baris */
 }
 
+/* Utility class untuk membatasi teks menjadi 2 baris dengan ellipsis (definisi ulang) */
 .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    overflow: hidden; /* Sembunyikan overflow */
+    display: -webkit-box; /* Gunakan model box fleksibel */
+    -webkit-box-orient: vertical; /* Orientasi vertikal */
+    -webkit-line-clamp: 2; /* Batasi menjadi 2 baris */
 }
 
+/* Utility class untuk membatasi teks menjadi 3 baris dengan ellipsis */
 .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    overflow: hidden; /* Sembunyikan overflow */
+    display: -webkit-box; /* Gunakan model box fleksibel */
+    -webkit-box-orient: vertical; /* Orientasi vertikal */
+    -webkit-line-clamp: 3; /* Batasi menjadi 3 baris */
 }

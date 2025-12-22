@@ -1,27 +1,39 @@
+// Import modul React dan hooks yang diperlukan
 import React, { useState, useEffect } from 'react';
+// Import ikon-ikon dari lucide-react
 import { Trash2, Filter, Search, Heart, Star, Calendar, Play, Film } from 'lucide-react';
+// Import komponen MovieCard
 import MovieCard from '../components/MovieCard';
 
+// Komponen untuk menampilkan daftar film favorit
 const Favorites = () => {
+    // State untuk menyimpan daftar favorit asli
     const [favorites, setFavorites] = useState([]);
+    // State untuk menyimpan daftar favorit yang sudah difilter
     const [filteredFavorites, setFilteredFavorites] = useState([]);
+    // State untuk status loading
     const [loading, setLoading] = useState(true);
+    // State untuk query pencarian
     const [searchQuery, setSearchQuery] = useState('');
+    // State untuk kriteria pengurutan
     const [sortBy, setSortBy] = useState('date');
 
-    // Load favorites dari localStorage
+    // Effect untuk memuat data favorit saat komponen pertama kali dirender
     useEffect(() => {
         loadFavorites();
     }, []);
 
+    // Effect untuk memfilter dan mengurutkan favorit saat ada perubahan
     useEffect(() => {
         filterAndSortFavorites();
     }, [favorites, searchQuery, sortBy]);
 
+    // Fungsi untuk memuat data favorit dari localStorage
     const loadFavorites = () => {
         try {
+            // Ambil data dari localStorage, default array kosong jika tidak ada
             const savedFavorites = JSON.parse(localStorage.getItem('roncomovie_favorites') || '[]');
-            // Sort by timestamp (most recent first)
+            // Urutkan berdasarkan timestamp (terbaru pertama)
             const sortedFavorites = savedFavorites.sort((a, b) => 
                 (b._timestamp || 0) - (a._timestamp || 0)
             );
@@ -34,10 +46,11 @@ const Favorites = () => {
         }
     };
 
+    // Fungsi untuk memfilter dan mengurutkan daftar favorit
     const filterAndSortFavorites = () => {
         let result = [...favorites];
 
-        // Apply search filter
+        // Terapkan filter pencarian
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             result = result.filter(movie =>
@@ -46,7 +59,7 @@ const Favorites = () => {
             );
         }
 
-        // Apply sorting
+        // Terapkan pengurutan berdasarkan kriteria
         switch (sortBy) {
             case 'title':
                 result.sort((a, b) => a.title?.localeCompare(b.title));
@@ -55,11 +68,11 @@ const Favorites = () => {
                 result.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
                 break;
             case 'date':
-                // Sort by when added to favorites (using timestamp)
+                // Urutkan berdasarkan waktu ditambahkan ke favorit
                 result.sort((a, b) => (b._timestamp || 0) - (a._timestamp || 0));
                 break;
             case 'release':
-                // Sort by release date
+                // Urutkan berdasarkan tanggal rilis
                 result.sort((a, b) => new Date(b.release_date || 0) - new Date(a.release_date || 0));
                 break;
             default:
@@ -69,15 +82,17 @@ const Favorites = () => {
         setFilteredFavorites(result);
     };
 
+    // Fungsi untuk menghapus satu film dari favorit
     const removeFavorite = (movieId) => {
         const updatedFavorites = favorites.filter(fav => fav.id !== movieId);
         setFavorites(updatedFavorites);
         localStorage.setItem('roncomovie_favorites', JSON.stringify(updatedFavorites));
         
-        // Show success message
+        // Tampilkan pesan sukses
         alert('Movie removed from favorites!');
     };
 
+    // Fungsi untuk menghapus semua film dari favorit
     const removeAllFavorites = () => {
         if (window.confirm('Are you sure you want to remove all favorites?')) {
             setFavorites([]);
@@ -87,11 +102,12 @@ const Favorites = () => {
         }
     };
 
-    // Fungsi toggle favorite untuk MovieCard
+    // Fungsi toggle favorite untuk dikirim ke MovieCard
     const toggleFavorite = (movie) => {
         removeFavorite(movie.id);
     };
 
+    // Tampilan loading
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
@@ -125,6 +141,7 @@ const Favorites = () => {
                             </div>
                         </div>
                         
+                        {/* Tombol hapus semua favorit */}
                         {favorites.length > 0 && (
                             <button
                                 onClick={removeAllFavorites}
@@ -137,11 +154,11 @@ const Favorites = () => {
                     </div>
                 </div>
 
-                {/* Search and Filter */}
+                {/* Pencarian dan Filter */}
                 {favorites.length > 0 && (
                     <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-gray-700">
                         <div className="flex flex-col lg:flex-row gap-4">
-                            {/* Search */}
+                            {/* Input pencarian */}
                             <div className="flex-1">
                                 <div className="relative">
                                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -155,7 +172,7 @@ const Favorites = () => {
                                 </div>
                             </div>
 
-                            {/* Sort Options */}
+                            {/* Dropdown pengurutan */}
                             <div className="flex items-center space-x-4">
                                 <div className="flex items-center space-x-2">
                                     <Filter className="h-5 w-5 text-gray-400" />
@@ -175,8 +192,9 @@ const Favorites = () => {
                     </div>
                 )}
 
-                {/* Favorites List */}
+                {/* Daftar Favorit */}
                 {favorites.length === 0 ? (
+                    // Tampilan jika tidak ada favorit
                     <div className="text-center py-20">
                         <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gray-800 to-black rounded-full mb-6 border border-gray-700">
                             <Heart className="h-12 w-12 text-gray-400" />
@@ -202,6 +220,7 @@ const Favorites = () => {
                         </div>
                     </div>
                 ) : filteredFavorites.length === 0 ? (
+                    // Tampilan jika pencarian tidak menemukan hasil
                     <div className="text-center py-20">
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-800/50 rounded-full mb-6">
                             <Search className="h-10 w-10 text-gray-400" />
@@ -218,6 +237,7 @@ const Favorites = () => {
                         </button>
                     </div>
                 ) : (
+                    // Tampilan daftar favorit
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {filteredFavorites.map((movie) => (
@@ -230,6 +250,7 @@ const Favorites = () => {
                                             alert(`Opening details for ${movie.title}`);
                                         }}
                                     />
+                                    {/* Tombol hapus film dari favorit */}
                                     <button
                                         onClick={() => removeFavorite(movie.id)}
                                         className="absolute top-2 right-2 z-20 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-all duration-300 transform hover:scale-110 shadow-lg"
@@ -237,6 +258,7 @@ const Favorites = () => {
                                     >
                                         <Trash2 size={16} />
                                     </button>
+                                    {/* Tampilkan tanggal film ditambahkan jika ada */}
                                     {movie._addedDate && (
                                         <div className="absolute top-2 left-2 z-20 bg-black/70 backdrop-blur-sm text-xs text-gray-300 px-2 py-1 rounded-full">
                                             Added {new Date(movie._addedDate).toLocaleDateString()}
@@ -246,7 +268,7 @@ const Favorites = () => {
                             ))}
                         </div>
 
-                        {/* Summary Stats */}
+                        {/* Statistik Ringkasan */}
                         <div className="mt-12 p-8 bg-gradient-to-br from-gray-800/50 to-black/50 rounded-2xl backdrop-blur-sm border border-gray-700">
                             <h3 className="text-2xl font-bold mb-6 flex items-center">
                                 <Heart className="h-6 w-6 text-red-400 mr-2" />
@@ -291,6 +313,7 @@ const Favorites = () => {
                                 </div>
                             </div>
                             
+                            {/* Informasi tambahan */}
                             {favorites.length > 0 && (
                                 <div className="mt-6 pt-6 border-t border-gray-700/50">
                                     <p className="text-gray-400 text-sm text-center">

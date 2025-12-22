@@ -1,14 +1,21 @@
+// Mengimpor modul React dan hooks yang diperlukan
 import React, { useState, useEffect } from 'react';
+// Mengimpor berbagai ikon dari lucide-react
 import { 
     BarChart3, Users, Film, Star, TrendingUp, 
     Calendar, Clock, PieChart, Download, Heart,
     Eye, Play, Award
 } from 'lucide-react';
+// Mengimpor context autentikasi
 import { useAuth } from '../context/AuthContext';
+// Mengimpor fungsi API untuk mendapatkan film berdasarkan kategori
 import { getMoviesByCategory } from '../services/api';
 
+// Komponen Dashboard untuk menampilkan statistik pengguna
 const Dashboard = () => {
+    // Mendapatkan data user dan fungsi getUserFavorites dari context auth
     const { user, getUserFavorites } = useAuth();
+    // State untuk menyimpan statistik dashboard
     const [stats, setStats] = useState({
         totalFavorites: 0,
         avgRating: 0,
@@ -17,41 +24,45 @@ const Dashboard = () => {
         monthlyActivity: {},
         recentActivity: []
     });
+    // State untuk menyimpan film-film terbaru
     const [recentMovies, setRecentMovies] = useState([]);
+    // State untuk status loading
     const [loading, setLoading] = useState(true);
 
+    // Effect untuk mengambil data dashboard saat komponen mount atau user berubah
     useEffect(() => {
         fetchDashboardData();
         fetchRecentMovies();
     }, [user]);
 
+    // Fungsi untuk mengambil dan menghitung data statistik dashboard
     const fetchDashboardData = () => {
         if (!user) return;
         
+        // Mendapatkan daftar favorit user
         const favorites = getUserFavorites();
         
-        // Calculate stats
+        // Menghitung total favorit
         const totalFavorites = favorites.length;
         
+        // Menghitung rating rata-rata
         const totalRating = favorites.reduce((sum, movie) => sum + (movie.vote_average || 0), 0);
         const avgRating = totalFavorites > 0 ? totalRating / totalFavorites : 0;
         
-        // Simulate watch time (assuming 2 hours per movie)
-        const totalWatchTime = totalFavorites * 120; // in minutes
+        // Simulasi total waktu menonton (asumsi 2 jam per film)
+        const totalWatchTime = totalFavorites * 120; // dalam menit
         
-        // Genre distribution
+        // Distribusi genre (data dummy untuk saat ini)
         const genres = {};
-        // Since favorites don't have genre_ids, we'll simulate or fetch from API
-        // For now, we'll use dummy data
         
-        // Monthly activity (simulated)
+        // Aktivitas bulanan (simulasi)
         const monthlyActivity = {};
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         monthNames.forEach(month => {
             monthlyActivity[month] = Math.floor(Math.random() * 10);
         });
 
-        // Recent activity
+        // Aktivitas terbaru (5 favorit terakhir)
         const recentActivity = favorites.slice(0, 5).map(fav => ({
             type: 'favorite',
             title: fav.title,
@@ -59,6 +70,7 @@ const Dashboard = () => {
             icon: Heart
         }));
 
+        // Update state stats
         setStats({
             totalFavorites,
             avgRating: parseFloat(avgRating.toFixed(1)),
@@ -70,15 +82,18 @@ const Dashboard = () => {
         setLoading(false);
     };
 
+    // Fungsi untuk mengambil film-film populer terbaru
     const fetchRecentMovies = async () => {
         try {
             const data = await getMoviesByCategory('popular');
+            // Ambil 3 film pertama
             setRecentMovies(data.movies.slice(0, 3));
         } catch (error) {
             console.error('Error fetching recent movies:', error);
         }
     };
 
+    // Fungsi untuk memformat waktu menonton dari menit ke format hari/jam
     const formatWatchTime = (minutes) => {
         const hours = Math.floor(minutes / 60);
         const days = Math.floor(hours / 24);
@@ -90,6 +105,7 @@ const Dashboard = () => {
         return `${hours}h`;
     };
 
+    // Jika user tidak login, tampilkan pesan
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center text-white">
@@ -101,6 +117,7 @@ const Dashboard = () => {
         );
     }
 
+    // Tampilan loading
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -112,7 +129,7 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen text-white py-8">
             <div className="container mx-auto px-4">
-                {/* Header */}
+                {/* Header Dashboard */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
                     <p className="text-gray-400">
@@ -120,9 +137,9 @@ const Dashboard = () => {
                     </p>
                 </div>
 
-                {/* Stats Grid */}
+                {/* Grid Statistik Utama */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {/* Total Favorites */}
+                    {/* Kartu Total Favorit */}
                     <div className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 rounded-2xl p-6 border border-blue-800/30 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-4">
                             <Heart className="h-10 w-10 text-blue-400" />
@@ -132,7 +149,7 @@ const Dashboard = () => {
                         <div className="text-gray-400">Favorites</div>
                     </div>
 
-                    {/* Average Rating */}
+                    {/* Kartu Rating Rata-rata */}
                     <div className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 rounded-2xl p-6 border border-purple-800/30 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-4">
                             <Star className="h-10 w-10 text-purple-400" />
@@ -142,7 +159,7 @@ const Dashboard = () => {
                         <div className="text-gray-400">Avg Rating</div>
                     </div>
 
-                    {/* Watch Time */}
+                    {/* Kartu Waktu Menonton */}
                     <div className="bg-gradient-to-br from-green-900/20 to-green-800/10 rounded-2xl p-6 border border-green-800/30 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-4">
                             <Clock className="h-10 w-10 text-green-400" />
@@ -152,7 +169,7 @@ const Dashboard = () => {
                         <div className="text-gray-400">Watch Time</div>
                     </div>
 
-                    {/* Recently Added */}
+                    {/* Kartu Aktivitas Terbaru */}
                     <div className="bg-gradient-to-br from-pink-900/20 to-pink-800/10 rounded-2xl p-6 border border-pink-800/30 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-4">
                             <Calendar className="h-10 w-10 text-pink-400" />
@@ -163,21 +180,23 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Charts and Recent Movies */}
+                {/* Bagian Bawah Dashboard - Charts dan Film Terbaru */}
                 <div className="grid lg:grid-cols-2 gap-8 mb-8">
-                    {/* Recent Activity */}
+                    {/* Panel Aktivitas Terbaru */}
                     <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold flex items-center">
                                 <TrendingUp className="h-6 w-6 mr-3 text-blue-400" />
                                 Recent Activity
                             </h2>
+                            {/* Tombol Export (simulasi) */}
                             <button className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
                                 <Download size={18} />
                                 <span className="text-sm">Export</span>
                             </button>
                         </div>
                         
+                        {/* Daftar Aktivitas Terbaru */}
                         <div className="space-y-4">
                             {stats.recentActivity.map((activity, index) => (
                                 <div key={index} className="flex items-center p-4 bg-gray-900/50 rounded-xl hover:bg-gray-900/80 transition-colors">
@@ -196,13 +215,14 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Recent Movies */}
+                    {/* Panel Film Populer Saat Ini */}
                     <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                         <h2 className="text-2xl font-bold mb-6 flex items-center">
                             <Film className="h-6 w-6 mr-3 text-purple-400" />
                             Popular Right Now
                         </h2>
                         
+                        {/* Daftar Film Populer */}
                         <div className="space-y-4">
                             {recentMovies.map((movie) => (
                                 <div key={movie.id} className="flex items-center p-4 bg-gray-900/50 rounded-xl hover:bg-gray-900/80 transition-colors group">
@@ -223,6 +243,7 @@ const Dashboard = () => {
                                             <span className="text-gray-400">📅 {movie.release_date}</span>
                                         </div>
                                     </div>
+                                    {/* Tombol untuk menambahkan ke favorit */}
                                     <button className="text-blue-400 hover:text-blue-300 text-sm">
                                         Add to Favorites
                                     </button>
@@ -232,13 +253,14 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* User Stats */}
+                {/* Panel Statistik Pengguna */}
                 <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-2xl p-6 border border-blue-800/30 backdrop-blur-sm">
                     <h2 className="text-2xl font-bold mb-6 flex items-center">
                         <Users className="h-6 w-6 mr-3 text-blue-400" />
                         Your Statistics
                     </h2>
                     
+                    {/* Grid Statistik Detail */}
                     <div className="grid md:grid-cols-3 gap-6">
                         <div className="text-center p-6 bg-gray-900/30 rounded-xl">
                             <div className="text-3xl font-bold text-blue-400 mb-2">{stats.totalFavorites}</div>
@@ -256,6 +278,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     
+                    {/* Informasi Akun Pengguna */}
                     <div className="mt-6 pt-6 border-t border-gray-700/30">
                         <div className="flex items-center justify-between">
                             <div>
